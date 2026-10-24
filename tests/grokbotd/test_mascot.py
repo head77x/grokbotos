@@ -100,5 +100,5 @@ class ShellThemeTest(unittest.TestCase):
         for rel in ("etc/xdg/fuzzel/fuzzel.ini", "etc/xdg/foot/foot.ini"):
             txt = open(os.path.join(helpers.SF, rel), encoding="utf-8").read()
             self.assertIn("CJK KR", txt, rel)
-            for v in re.findall(r"^[a-z0-9-]+=([0-9a-f]+)$", txt.split("[colors]")[1].split("\n[")[0], re.M):
+            for v in re.findall(r"^[a-z0-9-]+=([0-9a-f]+)$", txt.split("[colors")[1].split("\n[")[0], re.M):
                 self.assertIn(len(v), (6, 8), rel + " " + v)
