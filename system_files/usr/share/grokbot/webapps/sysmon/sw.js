@@ -1,7 +1,7 @@
 // System monitor service worker: the app shell works offline; live data
 // needs grokbotd, history comes from IndexedDB.
-const CACHE = "sysmon-v2";
-const SHELL = ["./", "index.html", "app.js", "style.css", "icon.svg", "manifest.json"];
+const CACHE = "sysmon-v3";
+const SHELL = ["./", "index.html", "app.js", "style.css", "icon.svg", "manifest.json", "/_grokbot/tokens.css", "/_grokbot/base.css"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));

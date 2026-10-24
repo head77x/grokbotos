@@ -85,6 +85,10 @@ def procfs():
     return _env("GROKBOT_PROCFS", "/proc")
 
 
+def design_dir():
+    return _env("GROKBOT_DESIGN_DIR", "/usr/share/grokbot/design")
+
+
 def webapps_dir():
     return _env("GROKBOT_WEBAPPS_DIR", "/usr/share/grokbot/webapps")
 
