@@ -11,10 +11,10 @@ COPY grokbot-app /grokbot-app
 # which blocks building/testing this image on arm64 (e.g. Apple Silicon
 # Macs via UTM). See docs/DECISIONS.md for the full history.
 # Pinned by digest (security review #8): the multi-arch index that
-# quay.io/fedora/fedora-bootc:latest pointed to on 2026-10-22. To update,
+# quay.io/fedora/fedora-bootc:latest pointed to on 2026-10-24. To update,
 # resolve the tag again and replace the digest in one reviewed commit:
 #   skopeo inspect --raw docker://quay.io/fedora/fedora-bootc:latest | sha256sum
-FROM quay.io/fedora/fedora-bootc:latest@sha256:03808453feb5369ed6b074421117b56734f3a6dff8e25d9e0ddff0e48e4d6d2e
+FROM quay.io/fedora/fedora-bootc:latest@sha256:1a17d180491130098b6881300ff3bbe74d37cc40968af4fbf3d5945a9779bb73
 
 # Grok Bot Linux app. Empty SOURCE selects the pinned RPM for TARGETARCH
 # (amd64 and arm64). GROKBOT_DISABLE_BUNDLED_APP=1 keeps the placeholder.
