@@ -74,3 +74,5 @@ button.danger { background:color-mix(in srgb, var(--gb-danger) 18%, transparent)
 .notice { border-left-color:var(--gb-warning); border-radius:var(--gb-r-sm); }
 #toast { left:auto; right:22px; transform:none; transition:opacity var(--gb-mid) var(--gb-ease); }
 td.mono, .mono { font-family:var(--gb-mono); }
+nav h1 .gb-mascot { width:30px; height:30px; }
+#bit { display:inline-flex; }
