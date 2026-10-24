@@ -87,3 +87,18 @@ class MascotTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ShellThemeTest(unittest.TestCase):
+    def test_shell_uses_tokens(self):
+        sway = open(os.path.join(helpers.SF, "etc/sway/config"), encoding="utf-8").read()
+        self.assertIn("client.focused           #64b5ff", sway)
+        self.assertIn("default_border none", sway)  # still no window chrome on a maximized app
+        lock = open(os.path.join(helpers.BIN, "grokbot-lock"), encoding="utf-8").read()
+        self.assertIn("--ring-wrong-color ff6b5eff", lock)
+        self.assertIn('--font "Noto Sans CJK KR"', lock)
+        for rel in ("etc/xdg/fuzzel/fuzzel.ini", "etc/xdg/foot/foot.ini"):
+            txt = open(os.path.join(helpers.SF, rel), encoding="utf-8").read()
+            self.assertIn("CJK KR", txt, rel)
+            for v in re.findall(r"^[a-z0-9-]+=([0-9a-f]+)$", txt.split("[colors]")[1].split("\n[")[0], re.M):
+                self.assertIn(len(v), (6, 8), rel + " " + v)
