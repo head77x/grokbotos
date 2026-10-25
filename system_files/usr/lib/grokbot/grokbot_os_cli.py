@@ -270,7 +270,7 @@ def cmd_audit(args, as_json):
 
 
 def cmd_grants(args, as_json):
-    params = {"principal": args[0]} if args else {}
+    params = {"principal": _norm_principal(args[0])} if args else {}
     if len(args) > 1:
         return _usage("usage: grants [principal]")
     try:

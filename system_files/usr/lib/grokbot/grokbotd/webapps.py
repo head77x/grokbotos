@@ -505,7 +505,7 @@ def uninstall(params, ctx):
     keep = bool(params.get("keep_data"))
     _prompt(ctx, "apps.uninstall", ["웹 앱 제거: %s" % rec.get("name_ko"), "Remove web app: %s" % rec.get("name")],
             {"app": rec.get("name"), "id": app_id, "origin": rec.get("origin"),
-             "data": "보관 / kept" if keep else "삭제 / deleted (storage, cache, grants)"})
+             "data": "보관 / kept" if keep else "삭제 / deleted (app data folder, storage, cache, grants)"})
     from . import sway
     subprocess.run(["swaymsg", "[app_id=\"grokbot-webapp-%s\"] kill" % app_id],
                    capture_output=True, timeout=5, env=sway.session_env()) if shutil.which("swaymsg") else None
@@ -524,6 +524,8 @@ def uninstall(params, ctx):
     revoked = []
     if not keep:
         shutil.rmtree(profile_dir(app_id), ignore_errors=True)
+        from . import appdata
+        appdata.remove_all(app_id)
         if rec.get("origin"):
             revoked = perms.revoke("origin:" + rec["origin"])
     return {"id": app_id, "removed": True, "data_kept": keep, "revoked": revoked}
