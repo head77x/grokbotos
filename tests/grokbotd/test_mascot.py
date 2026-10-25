@@ -103,6 +103,7 @@ class MascotTest(unittest.TestCase):
         cr = cairo.Context(surf)
         for mood in m.MOODS:
             m.draw(cr, 48, m.face(mood))
+            m.draw(cr, 48, m.face(mood), fit=True)
         self.assertTrue(any(surf.get_data()))
 
     def test_js_and_python_agree(self):
@@ -112,7 +113,15 @@ class MascotTest(unittest.TestCase):
         for name in ("CX", "CY", "R", "EYE_W", "EYE_H", "EYE_L", "EYE_R", "EYE_Y", "BLINK_H", "BLINK_S", "HERO_W", "HERO_H", "HERO_L", "HERO_R"):
             v = float(re.search(r"\b%s = ([0-9.]+)" % name, js).group(1))
             self.assertEqual(v, getattr(m, name), name)
-        self.assertIn('viewBox: "0 0 92 92"', js)
+        self.assertIn('"0 0 92 92"', js)
+        self.assertIn('"%g %g %g %g"' % (m.FIT[0], m.FIT[1], m.FIT[2], m.FIT[2]), js)
+        for mood in m.MOODS:   # every motion stays inside the tight viewport
+            for k in range(40):
+                g = m.face(mood, t=k / 13.0, age=k / 20.0)
+                cx, cy, r = g["body"]
+                rr = r * g["scale"]
+                self.assertTrue(m.FIT[0] <= cx - rr and cx + rr <= m.FIT[0] + m.FIT[2], mood)
+                self.assertTrue(m.FIT[1] <= cy - rr and cy + rr <= m.FIT[1] + m.FIT[2], mood)
         for mood, text in m.LABELS.items():
             self.assertIn('%s: "%s"' % (mood, text), js)
         src = js + open(m.__file__, encoding="utf-8").read()

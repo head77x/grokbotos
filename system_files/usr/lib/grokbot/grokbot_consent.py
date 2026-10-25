@@ -159,7 +159,7 @@ def main():
             grokbot_mascot.draw(cr, min(a.width, a.height),
                                 grokbot_mascot.face("alert", anim["b"], anim["l"], time.monotonic(),
                                                     time.monotonic() - born),
-                                fg="#f2f2f2", bg="#18181b")
+                                fg="#f2f2f2", bg="#18181b", fit=True)
             return False
 
         def tick():

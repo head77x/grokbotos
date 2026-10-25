@@ -442,7 +442,7 @@ class Dock:
             # Dark Dock: light body, eyes in the Dock colour (theme inverse).
             f = grokbot_mascot.face(self.mascot_mood, state["b"], state["l"], state["t"],
                                     state["t"] - state["since"])
-            grokbot_mascot.draw(cr, sz, f, fg="#f2f2f2", bg="#121214")
+            grokbot_mascot.draw(cr, sz, f, fg="#f2f2f2", bg="#121214", fit=True)
             return False
 
         def tick():

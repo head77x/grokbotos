@@ -87,7 +87,9 @@
   function create(mood, label, opts) {
     const stateEl = opts && opts.labelEl; // optional text node next to the face
     const hero = !!(opts && opts.hero);    // large avatar proportions
-    const svg = el("svg", { viewBox: "0 0 92 92", class: hero ? "gb-mascot lg" : "gb-mascot", role: "img" });
+    // Small faces use a tight viewport (FIT, same as Python) so the circle
+    // fills the slot; the hero keeps the full 92 box with its margin.
+    const svg = el("svg", { viewBox: hero ? "0 0 92 92" : "12 11 68 68", class: hero ? "gb-mascot lg" : "gb-mascot", role: "img" });
     const title = el("title", {});
     svg.append(title);
     const g = el("g", {});

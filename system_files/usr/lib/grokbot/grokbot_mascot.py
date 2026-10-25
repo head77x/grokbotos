@@ -223,7 +223,10 @@ def _rrect(cr, x, y, w, h, r):
     cr.close_path()
 
 
-def draw(cr, size, f, fg=INK, bg=PAPER, shadow=None):
+FIT = (12.0, 11.0, 68.0)   # tight viewport (x, y, side) that still fits hop/pop
+
+
+def draw(cr, size, f, fg=INK, bg=PAPER, shadow=None, fit=False):
     """Paint face f with cairo into a size x size square at the origin.
     fg is the body, bg the eyes (swap them on a dark surface). shadow
     defaults on for large faces, like the official large avatar."""
@@ -231,7 +234,12 @@ def draw(cr, size, f, fg=INK, bg=PAPER, shadow=None):
         shadow = size >= 64
     cx, cy, r = f["body"]
     cr.save()
-    cr.scale(size / VIEW, size / VIEW)
+    if fit:   # small UI slots: the circle fills the slot like an app icon
+        fx, fy, side = FIT
+        cr.scale(size / side, size / side)
+        cr.translate(-fx, -fy)
+    else:
+        cr.scale(size / VIEW, size / VIEW)
     cr.translate(cx, cy)
     cr.scale(f["scale"], f["scale"])
     cr.translate(-cx, -cy)
