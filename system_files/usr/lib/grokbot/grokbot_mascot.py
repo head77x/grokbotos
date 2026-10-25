@@ -1,67 +1,107 @@
-"""Bit, the Grok Bot OS character: a rounded-square head with two pill
-eyes, drawn entirely in code. Expressions are geometry, so every surface
-(Dock, consent prompt, web apps via /_grokbot/mascot.js) animates the same
-way. Pure functions here; cairo drawing is optional (draw()).
+"""The Grok Bot OS face, drawn in code after the x.ai/bot avatar guideline:
+a flat circle (viewBox 0 0 92 92, centre 46,46, r 27.6) with two vertical
+pill eyes in the background colour. No mouth, brows or limbs, ever. Every
+state is told by eye shape/tilt and body motion only.
 
-Coordinates are a 100x100 box. A face is a dict:
-  head: (x, y, w, h, radius)    eyes: [shape, shape]    mouth: shape|None
-  coat: "#rrggbb"
-shape kinds: ("pill", cx, cy, w, h) ("arc", cx, cy, w, h) ("x", cx, cy, s)
-             ("line", x1, y1, x2, y2) ("o", cx, cy, r)
+face(mood, blink, look, t, age) -> dict
+  body: (cx, cy, r)            scale: float (applied about the body centre)
+  eyes: [(cx, cy, w, h, deg), (cx, cy, w, h, deg)]   rotation about own centre
+  dim:  0..1 opacity of the body (sad/error look dimmer)
+Colours are not baked in: the body is the foreground ink and the eyes the
+background, so the face inverts with the theme (draw(fg=, bg=)).
 """
 import math
 import os
 import random
 
 MOODS = ("idle", "thinking", "listening", "happy", "alert", "error", "sleeping", "sad")
-COATS = {"idle": "#4c8dff", "thinking": "#8b6cf6", "listening": "#3fc2a6", "happy": "#3fc2a6",
-         "alert": "#f2b33d", "error": "#ff6b5e", "sleeping": "#6b7280", "sad": "#8b9bb4"}
-INK = "#0a0a0b"
-HEAD = (8.0, 10.0, 84.0, 80.0, 30.0)
-EYE_Y, EYE_DX, EYE_W, EYE_H = 44.0, 17.0, 11.0, 22.0
+VIEW = 92.0
+CX, CY, R = 46.0, 46.0, 27.6
+EYE_W, EYE_H = 6.9, 15.6
+EYE_L, EYE_R, EYE_Y = 37.45, 54.5, 46.0   # x 34.0-40.9 / 51.0-58.0, y 38.2-53.8
+BLINK_H = 3.2
+BLINK_S = 0.25
+INK, PAPER = "#0a0a0a", "#ffffff"
+COATS = {"orange": "#F19D38", "teal": "#54B9A6", "purple": "#885CF5",
+         "blue": "#3C82F6", "red": "#EA4045"}
+LABELS = {"idle": "", "thinking": "생각 중… / Thinking…", "listening": "듣는 중… / Listening…",
+          "happy": "완료 / Done", "alert": "확인이 필요합니다 / Needs you",
+          "error": "문제가 생겼습니다 / Something went wrong", "sleeping": "절전 / Resting",
+          "sad": "연결 안 됨 / Offline"}
 
 
-def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0):
-    """Geometry for mood. blink 0 (open)..1 (closed); look in -1..1 moves
-    the eyes; t (seconds) drives the slow breathing/pulse."""
+def _clamp(v, lo=-1.0, hi=1.0):
+    return max(lo, min(hi, v))
+
+
+def spring(age):
+    """Settle-on-appear scale factor: 0.85 -> overshoot -> 1."""
+    if age is None or age >= 1.2:
+        return 1.0
+    a = max(0.0, age)
+    return 1.0 - 0.15 * math.exp(-6.0 * a) * math.cos(12.0 * a)
+
+
+def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0, age=None):
+    """Geometry for mood. blink 0 (open)..1 (closed, eye h 3.2); look x/y in
+    -1..1 (eyes lean/rotate toward x, body follows); t seconds drives the
+    wobble; age seconds since the face appeared (spring settle)."""
     if mood not in MOODS:
         mood = "idle"
-    lx, ly = max(-1.0, min(1.0, look[0])), max(-1.0, min(1.0, look[1]))
-    bob = math.sin(t * 2 * math.pi / 3.2) * 1.2
-    x, y, w, h, r = HEAD
-    head = (x, y + bob, w, h, r)
-    cx, cy = 50.0 + lx * 7, EYE_Y + ly * 5 + bob
-    ew, eh = EYE_W, EYE_H
-    mouth = None
-    if mood == "thinking":
-        cy -= 6
-        cx += 5
-        eh *= 0.8
-        mouth = ("line", 44, 72 + bob, 54, 71 + bob)
-    elif mood == "listening":
-        ew, eh = ew * 1.15, eh * 1.12
-        mouth = ("o", 50, 72 + bob, 3.5 + 1.2 * abs(math.sin(t * 4)))
-    elif mood == "alert":
-        ew, eh = ew * 1.2, eh * 1.15
-        mouth = ("o", 50, 73 + bob, 3.0)
-    elif mood == "sad":
-        cy += 4
-        eh *= 0.75
-        mouth = ("arc", 50, 76 + bob, 14, -4)
-    elif mood == "sleeping":
+    lx, ly = _clamp(look[0]), _clamp(look[1])
+    sc = 1.0 + 0.03 * math.sin(t * 2 * math.pi / 3.2)       # gentle pulse
+    bx = 0.8 * math.sin(t * 0.9) + lx * 2.0                 # body leans with eyes
+    by = 0.8 * math.sin(t * 1.3)
+    ew, eh, edy, spread, tilt = EYE_W, EYE_H, ly * 2.0, 0.0, 0.0
+    rot = lx * 12.0
+    dim = 1.0
+    if mood == "thinking":       # eyes up to the side, slow wobble
+        lx, ly = 0.8, -0.7
+        rot = 12.0 + 3.0 * math.sin(t * 1.1)
+        edy = -3.0
+        bx = 2.0 + 1.2 * math.sin(t * 0.7)
+        sc = 1.0 + 0.02 * math.sin(t * 2 * math.pi / 4.5)
+    elif mood == "listening":    # eyes a touch larger, gentle pulse
+        ew, eh = ew * 1.12, eh * 1.1
+        sc = 1.0 + 0.04 * math.sin(t * 2 * math.pi * 1.2)
+    elif mood == "alert":        # quick pop, eyes wide
+        ew, eh = ew * 1.18, eh * 1.12
+        sc = 1.05 + 0.025 * math.sin(t * 2 * math.pi * 1.6)
+        spread = 0.8
+    elif mood == "sleeping":     # eyes a thin line, slow breathing
         blink = 1.0
-        cy += 4
-    elif mood == "happy":
-        mouth = ("arc", 50, 68 + bob, 18, 6)
-    if mood == "happy":
-        eyes = [("arc", cx - EYE_DX, cy, 14, -7), ("arc", cx + EYE_DX, cy, 14, -7)]
-    elif mood == "error":
-        eyes = [("x", cx - EYE_DX, cy, 9), ("x", cx + EYE_DX, cy, 9)]
-        mouth = ("line", 42, 73 + bob, 58, 73 + bob)
+        rot = 0.0
+        lx = 0.0
+        edy = 2.0
+        sc = 1.0 + 0.04 * math.sin(t * 2 * math.pi / 4.5)
+        bx, by = 0.0, 1.2 * math.sin(t * 2 * math.pi / 4.5)
+    elif mood in ("sad", "error"):   # eyes droop and tilt down, dimmer
+        edy, eh, tilt, rot, lx = 3.0, eh * 0.82, 14.0, 0.0, 0.0
+        by += 1.5
+        dim = 0.55 if mood == "error" else 0.7
+        if mood == "error":
+            bx = 1.2 * math.sin(t * 14.0) * max(0.0, math.cos(t * 0.8))
+    elif mood == "happy":        # bouncy hop
+        by = -4.0 * abs(math.sin(math.pi * t * 1.6))
+        eh *= 0.94
+    sc *= spring(age)
+    if mood != "sleeping":
+        b = _clamp(blink, 0.0, 1.0)
+        eh = eh - (eh - BLINK_H) * b
     else:
-        bh = max(2.5, eh * (1.0 - max(0.0, min(1.0, blink))))
-        eyes = [("pill", cx - EYE_DX, cy, ew, bh), ("pill", cx + EYE_DX, cy, ew, bh)]
-    return {"mood": mood, "head": head, "eyes": eyes, "mouth": mouth, "coat": COATS[mood]}
+        eh = BLINK_H * 0.75
+    ex = lx * 3.5
+    eyes = [(EYE_L - spread + ex, EYE_Y + edy, ew, eh, rot - tilt),
+            (EYE_R + spread + ex, EYE_Y + edy, ew, eh, rot + tilt)]
+    return {"mood": mood, "body": (CX + bx, CY + by, R), "scale": sc, "eyes": eyes,
+            "dim": dim, "label": LABELS[mood]}
+
+
+def blink_at(dt):
+    """Blink amount dt seconds into a blink: symmetric sine ease over 250ms."""
+    if dt < 0 or dt >= BLINK_S:
+        return 0.0
+    return math.sin(math.pi * dt / BLINK_S)
 
 
 class Idle:
@@ -77,9 +117,9 @@ class Idle:
     def step(self, now):
         blink = 0.0
         dt = now - self.next_blink
-        if 0 <= dt < 0.18:
-            blink = 1.0 - abs(dt - 0.09) / 0.09
-        elif dt >= 0.18:
+        if 0 <= dt < BLINK_S:
+            blink = blink_at(dt)
+        elif dt >= BLINK_S:
             self.next_blink = now + self.rng.uniform(2, 6)
         if now >= self.next_look:
             self.target = (self.rng.choice((-1, -0.6, 0.6, 1)), self.rng.uniform(-0.4, 0.3))
@@ -92,7 +132,7 @@ class Idle:
     def animating(self, now):
         """True while a blink or glance is in motion (redraw fast)."""
         moving = any(abs(a) > 0.02 for a in self.look) or now < self.look_until
-        return moving or 0 <= now - self.next_blink < 0.2
+        return moving or 0 <= now - self.next_blink < BLINK_S + 0.02
 
 
 def _cpu_busy():
@@ -176,34 +216,35 @@ def _rrect(cr, x, y, w, h, r):
     cr.close_path()
 
 
-def draw(cr, size, f, ink=INK):
-    """Paint face f with cairo into a size x size square at the origin."""
+def draw(cr, size, f, fg=INK, bg=PAPER, shadow=None):
+    """Paint face f with cairo into a size x size square at the origin.
+    fg is the body, bg the eyes (swap them on a dark surface). shadow
+    defaults on for large faces, like the official large avatar."""
+    if shadow is None:
+        shadow = size >= 64
+    cx, cy, r = f["body"]
     cr.save()
-    cr.scale(size / 100.0, size / 100.0)
-    cr.set_source_rgb(*_rgb(f["coat"]))
-    _rrect(cr, *f["head"])
+    cr.scale(size / VIEW, size / VIEW)
+    cr.translate(cx, cy)
+    cr.scale(f["scale"], f["scale"])
+    cr.translate(-cx, -cy)
+    if shadow:
+        for i in range(6, 0, -1):
+            cr.set_source_rgba(0, 0, 0, 0.035)
+            cr.arc(cx, cy + 3.0, r + i * 0.9, 0, 2 * math.pi)
+            cr.fill()
+    cr.push_group()
+    cr.set_source_rgb(*_rgb(fg))
+    cr.arc(cx, cy, r, 0, 2 * math.pi)
     cr.fill()
-    cr.set_source_rgb(*_rgb(ink))
-    cr.set_line_cap(1)  # round
-    cr.set_line_width(5)
-    for s in f["eyes"] + ([f["mouth"]] if f["mouth"] else []):
-        k = s[0]
-        if k == "pill":
-            _, cx, cy, w, h = s
-            _rrect(cr, cx - w / 2, cy - h / 2, w, h, w / 2)
-            cr.fill()
-        elif k == "o":
-            cr.arc(s[1], s[2], s[3], 0, 2 * math.pi)
-            cr.fill()
-        elif k == "x":
-            _, cx, cy, d = s
-            cr.move_to(cx - d / 2, cy - d / 2); cr.line_to(cx + d / 2, cy + d / 2)
-            cr.move_to(cx + d / 2, cy - d / 2); cr.line_to(cx - d / 2, cy + d / 2)
-            cr.stroke()
-        elif k == "line":
-            cr.move_to(s[1], s[2]); cr.line_to(s[3], s[4]); cr.stroke()
-        elif k == "arc":
-            _, cx, cy, w, d = s
-            cr.move_to(cx - w / 2, cy); cr.curve_to(cx - w / 4, cy + d, cx + w / 4, cy + d, cx + w / 2, cy)
-            cr.stroke()
+    cr.set_source_rgb(*_rgb(bg))
+    for ex, ey, w, h, deg in f["eyes"]:
+        cr.save()
+        cr.translate(ex, ey)
+        cr.rotate(math.radians(deg))
+        _rrect(cr, -w / 2, -h / 2, w, h, w / 2)
+        cr.fill()
+        cr.restore()
+    cr.pop_group_to_source()
+    cr.paint_with_alpha(f["dim"])
     cr.restore()

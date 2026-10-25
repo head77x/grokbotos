@@ -432,13 +432,17 @@ class Dock:
         btn.connect("clicked", self.on_status_click, "mascot")
         self.mascot_mood = "idle"
         life = grokbot_mascot.Idle(now=time.monotonic())
-        state = {"b": 0.0, "l": (0.0, 0.0), "t": 0.0, "alive": True}
+        state = {"b": 0.0, "l": (0.0, 0.0), "t": 0.0, "alive": True,
+                 "mood": "idle", "since": time.monotonic()}
 
         def on_draw(_w, cr):
             a = area.get_allocation()
             sz = min(a.width, a.height)
             cr.translate((a.width - sz) / 2, (a.height - sz) / 2)
-            grokbot_mascot.draw(cr, sz, grokbot_mascot.face(self.mascot_mood, state["b"], state["l"], state["t"]))
+            # Dark Dock: light body, eyes in the Dock colour (theme inverse).
+            f = grokbot_mascot.face(self.mascot_mood, state["b"], state["l"], state["t"],
+                                    state["t"] - state["since"])
+            grokbot_mascot.draw(cr, sz, f, fg="#f2f2f2", bg="#121214")
             return False
 
         def tick():
@@ -447,8 +451,9 @@ class Dock:
             now = time.monotonic()
             state["b"], state["l"] = life.step(now)
             state["t"] = now
-            if self.mascot_mood in ("idle", "listening", "thinking", "sleeping") or life.animating(now):
-                area.queue_draw()
+            if self.mascot_mood != state["mood"]:   # new state: spring in again
+                state["mood"], state["since"] = self.mascot_mood, now
+            area.queue_draw()   # the face always wobbles gently
             return True
         area.connect("draw", on_draw)
         area.connect("destroy", lambda *_: state.update(alive=False))

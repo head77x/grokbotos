@@ -150,13 +150,16 @@ def main():
     face_area.set_size_request(44, 44)
     try:
         import grokbot_mascot
-        life = grokbot_mascot.Idle(now=time.monotonic())
+        born = time.monotonic()
+        life = grokbot_mascot.Idle(now=born)
         anim = {"b": 0.0, "l": (0.0, -0.3)}
 
         def draw_face(w, cr):
             a = w.get_allocation()
             grokbot_mascot.draw(cr, min(a.width, a.height),
-                                grokbot_mascot.face("alert", anim["b"], anim["l"], time.monotonic()))
+                                grokbot_mascot.face("alert", anim["b"], anim["l"], time.monotonic(),
+                                                    time.monotonic() - born),
+                                fg="#f2f2f2", bg="#18181b")
             return False
 
         def tick():

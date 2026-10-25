@@ -1,6 +1,7 @@
-"""Bit, the code-drawn character: moods, OS-state mapping, idle life, and
+"""The code-drawn Grok Bot face: moods, OS-state mapping, idle life, and
 the web (mascot.js) and native (grokbot_mascot.py) copies agreeing."""
 import json
+import math
 import os
 import random
 import re
@@ -13,19 +14,47 @@ JS = os.path.join(helpers.SF, "usr/share/grokbot/design/mascot.js")
 
 
 class MascotTest(unittest.TestCase):
-    def test_every_mood_has_geometry_inside_the_box(self):
+    def test_official_face_geometry(self):
+        # x.ai/bot avatar: viewBox 92, circle (46,46) r 27.6, pill eyes
+        # 6.9 x 15.6 at x 34.0-40.9 / 51.0-58.0, y 38.2-53.8; no mouth.
+        f = m.face("idle")
+        self.assertEqual(f["body"], (46.0, 46.0, 27.6))
+        self.assertEqual(f["scale"], 1.0)
+        (lx, ly, lw, lh, lr), (rx, ry, rw, rh, rr) = f["eyes"]
+        self.assertAlmostEqual(lx - lw / 2, 34.0, places=1)
+        self.assertAlmostEqual(lx + lw / 2, 40.9, places=1)
+        self.assertAlmostEqual(rx - rw / 2, 51.05, places=1)
+        self.assertAlmostEqual(ly - lh / 2, 38.2, places=1)
+        self.assertAlmostEqual(ly + lh / 2, 53.8, places=1)
+        self.assertEqual((lr, rr), (0.0, 0.0))
         for mood in m.MOODS:
-            f = m.face(mood, blink=0.5, look=(1, -1), t=1.3)
-            self.assertEqual(f["mood"], mood)
-            self.assertEqual(len(f["eyes"]), 2)
-            x, y, w, h, _r = f["head"]
-            self.assertTrue(0 <= x and x + w <= 100 and 0 <= y and y + h <= 100, mood)
+            g = m.face(mood, blink=0.3, look=(1, -1), t=1.3, age=0.2)
+            self.assertEqual(set(g), {"mood", "body", "scale", "eyes", "dim", "label"}, mood)
+            cx, cy, r = g["body"]
+            self.assertTrue(abs(cx - 46) < 5 and abs(cy - 46) < 6 and r == 27.6, mood)
+            self.assertTrue(0.8 < g["scale"] < 1.12, mood)
+            for ex, ey, w, h, deg in g["eyes"]:   # eyes stay inside the body
+                self.assertLess(math.hypot(ex - cx, ey - cy) + h / 2, r, mood)
+                self.assertLessEqual(abs(deg), 18, mood)
         self.assertEqual(m.face("nope")["mood"], "idle")
-        self.assertEqual(m.face("error")["eyes"][0][0], "x")
-        self.assertEqual(m.face("happy")["eyes"][0][0], "arc")
-        # sleeping eyes are closed lines; idle eyes open
-        self.assertLess(m.face("sleeping")["eyes"][0][4], 3)
-        self.assertGreater(m.face("idle")["eyes"][0][4], 20)
+
+    def test_states_use_eyes_and_motion_only(self):
+        self.assertAlmostEqual(m.face("idle", blink=1.0)["eyes"][0][3], 3.2)   # blink 15.6 -> 3.2
+        self.assertAlmostEqual(m.blink_at(0.125), 1.0)
+        self.assertEqual(m.blink_at(0.25), 0.0)
+        self.assertLess(m.face("sleeping")["eyes"][0][3], 3.2)                 # closed line
+        self.assertGreater(m.face("listening")["eyes"][0][2], m.EYE_W)         # larger eyes
+        self.assertGreater(m.face("alert")["scale"], 1.02)                     # pop
+        th = m.face("thinking")["eyes"][0]
+        self.assertLess(th[1], m.EYE_Y)                                        # eyes look up
+        self.assertGreater(th[4], 5)                                           # and to the side
+        sad = m.face("sad")["eyes"]
+        self.assertGreater(sad[0][1], m.EYE_Y)                                 # droop
+        self.assertLess(sad[0][4], 0); self.assertGreater(sad[1][4], 0)        # tilt down
+        self.assertLess(m.face("error")["dim"], 1)
+        hops = [m.face("happy", t=k / 10)["body"][1] for k in range(10)]
+        self.assertLess(min(hops), 43)                                         # hop
+        self.assertLess(m.spring(0.0), 0.9); self.assertEqual(m.spring(2.0), 1.0)
 
     def test_os_state_to_mood(self):
         self.assertEqual(m.mood_for([])[0], "idle")
@@ -77,8 +106,14 @@ class MascotTest(unittest.TestCase):
         js = open(JS, encoding="utf-8").read()
         moods = json.loads(re.search(r"const MOODS = (\[[^\]]*\])", js).group(1))
         self.assertEqual(tuple(moods), m.MOODS)
-        for mood, coat in m.COATS.items():
-            self.assertIn('%s: "%s"' % (mood, coat), js)
+        for name in ("CX", "CY", "R", "EYE_W", "EYE_H", "EYE_L", "EYE_R", "EYE_Y", "BLINK_H", "BLINK_S"):
+            v = float(re.search(r"\b%s = ([0-9.]+)" % name, js).group(1))
+            self.assertEqual(v, getattr(m, name), name)
+        self.assertIn('viewBox: "0 0 92 92"', js)
+        for mood, text in m.LABELS.items():
+            self.assertIn('%s: "%s"' % (mood, text), js)
+        src = js + open(m.__file__, encoding="utf-8").read()
+        self.assertNotIn("mouth", src.replace("No mouth", ""))   # the face never has one
         self.assertNotIn("innerHTML", js)
         for app in ("files", "notes", "settings"):
             html = open(os.path.join(helpers.SF, "usr/share/grokbot/webapps", app, "index.html"), encoding="utf-8").read()

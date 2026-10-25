@@ -39,7 +39,7 @@
       if (!pending) { clearTimeout(bitTimer); bitMood(); }
     }
   }
-  if (window.GBMascot) document.getElementById("bit").append(GBMascot.create("idle", "Bit"));
+  if (window.GBMascot) document.getElementById("bit").append(GBMascot.create("idle", "Grok Bot", { labelEl: document.getElementById("bitstate") }));
 
   function h(tag, attrs, ...kids) {
     const el = document.createElement(tag);

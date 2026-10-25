@@ -49,6 +49,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: none;
 .hidden { display: none !important; }
 /* Bit, the character (mascot.js) */
 .gb-mascot { width: 40px; height: 40px; flex: none; overflow: visible; }
-.gb-mascot .head { transition: fill var(--gb-slow) var(--gb-ease); }
-.gb-mascot .ink { fill: #0a0a0b; }
-.gb-mascot .stroke { fill: none; stroke: #0a0a0b; stroke-width: 5; stroke-linecap: round; }
+/* The face inverts with the theme: body = foreground ink, eyes = background. */
+.gb-mascot .body { fill: var(--gb-text); transition: fill var(--gb-slow) var(--gb-ease); }
+.gb-mascot .eye { fill: var(--gb-bg); }
+.card .gb-mascot .eye, .need .gb-mascot .eye { fill: var(--gb-surface); }
+.gb-state { font-size: var(--gb-fs-xs); color: var(--gb-text-2); }
+.gb-mascot.lg { filter: drop-shadow(0 6px 14px rgb(0 0 0 / .22)); }
