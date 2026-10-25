@@ -32,6 +32,17 @@ exec sh -c 'mkdir -p "$HOME/.local/share/grokbot" "$HOME/Apps" "$HOME/.local/sha
 default_border none
 default_floating_border none
 hide_edge_borders both
+# Design system (docs/DESIGN.md): a quiet frame around each app, jet
+# colours, the accent only where focus is. A single maximized window keeps
+# no border (hide_edge_borders), so this only shows with splits/floats.
+gaps inner 6
+gaps outer 4
+smart_gaps off
+#                        border    background text      indicator child_border
+client.focused           #64b5ff   #18181b    #f2f2f2   #64b5ff   #64b5ff
+client.focused_inactive  #2a2a2e   #121214    #a3a3a3   #2a2a2e   #2a2a2e
+client.unfocused         #1c1c1f   #0a0a0b    #8a8a8a   #1c1c1f   #1c1c1f
+client.urgent            #e8a33d   #18181b    #f2f2f2   #e8a33d   #e8a33d
 
 bar {
     mode invisible

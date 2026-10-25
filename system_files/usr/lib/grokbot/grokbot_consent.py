@@ -79,7 +79,7 @@ CSS = b"""
 @define-color gb_danger #ff6b5e;
 window.grokbot-consent { background-color: rgba(0,0,0,0); }
 .card { background-color: @gb_surface; border: 1px solid alpha(@gb_warning, 0.55); border-radius: 22px;
-  padding: 24px 26px; color: @gb_text; box-shadow: 0 18px 48px rgba(0,0,0,0.55); margin: 24px; }
+  padding: 24px 26px; color: @gb_text; }
 .card.sensitive { border-color: alpha(@gb_danger, 0.7); }
 .title { font-size: 20px; font-weight: bold; }
 .key { color: @gb_text3; font-size: 11px; font-weight: bold; margin-top: 4px; }

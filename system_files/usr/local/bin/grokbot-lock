@@ -56,7 +56,15 @@ fi
 
 if ! pgrep -u "$user" -x swaylock >/dev/null; then
     # -f: fork once the lock surface is up, so suspend happens after locking.
-    swaylock -f -c 18181b --indicator-radius 80 --show-failed-attempts
+    # Design tokens: jet background, a thin accent ring that turns amber
+    # while checking and coral on a wrong PIN; Korean-capable font.
+    swaylock -f -c 0a0a0b --show-failed-attempts \
+        --font "Noto Sans CJK KR" --indicator-radius 90 --indicator-thickness 6 \
+        --inside-color 121214ff --ring-color 2a2a2eff --line-color 00000000 --separator-color 00000000 \
+        --key-hl-color 64b5ffff --bs-hl-color ff6b5eff --text-color f2f2f2ff \
+        --inside-ver-color 121214ff --ring-ver-color e8a33dff --text-ver-color f2f2f2ff \
+        --inside-wrong-color 121214ff --ring-wrong-color ff6b5eff --text-wrong-color ff6b5eff \
+        --inside-clear-color 121214ff --ring-clear-color 4cc79bff --text-clear-color f2f2f2ff
 fi
 if [[ ${1:-} == "--suspend" ]]; then
     systemctl suspend
