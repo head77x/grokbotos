@@ -66,6 +66,7 @@ SCOPES = {
     "notifications": ("알림과 방해 금지", "Notifications and Do Not Disturb"),
     "lock": ("화면 잠금과 대기", "Screen lock and idle"),
     "screen": ("화면 캡처", "Screen capture"),
+    "app-data": ("이 앱 전용 데이터 폴더", "This app's own data folder"),
     "files": ("홈 폴더 파일 보기", "See files in your home folder"),
     "files-write": ("홈 폴더 파일 바꾸기(저장, 이름 바꾸기, 휴지통)", "Change files in your home folder (save, rename, trash)"),
     "updates": ("OS 업데이트(확인, 설치, 되돌리기)", "OS updates (check, install, roll back)"),
@@ -167,6 +168,16 @@ def mode_for(principal, scope, access, capability=None):
         in_session = scope in _session.get(principal, ())
     if in_session and scope not in ALWAYS_ASK:
         return "allow", "session"
+    if scope == "app-data":
+        # Installed apps reach only their own folder (appdata.py): allowed
+        # without a prompt unless the user stored a deny for that app.
+        ug = _user().get(principal, {})
+        if isinstance(ug, dict) and isinstance(ug.get(scope), dict) and ug[scope].get("mode") == "deny":
+            return "deny", "user"
+        from . import appdata
+        if appdata.app_for(principal) is not None:
+            return "allow", "app"
+        return "deny", "default"
     if is_local(principal) and access == "read":
         # The user's own processes always read (the dock polls status);
         # a stored mode only governs writes.

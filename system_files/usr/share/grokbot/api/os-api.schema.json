@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/head77x/grokbotos/os-api.schema.json",
   "title": "Grok Bot OS API",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Single source of truth for grokbotd. JSON-RPC 2.0 over the unix socket and POST /v1/rpc, the grokbot-os CLI and the MCP tools are all generated from this file. Every method has a scope (an OS function) and an access level (read or write); permissions are granted per caller per scope with mode allow, ask or deny (docs/OS_API.md, SECURITY.md).",
   "x-capabilities": {
     "system.read": "OS name, version, kernel, hostname, uptime, memory, bootc image",
@@ -46,7 +46,9 @@
     "power-mode.read": "Current power mode and the modes this computer offers",
     "power-mode.write": "Switch power mode (power saver, balanced, performance)",
     "printing.read": "Printers (CUPS queues and driverless network printers), the default printer and your print jobs",
-    "printing.write": "Choose the default printer, print a file from the home folder or an open USB drive, print a test page, cancel your jobs"
+    "printing.write": "Choose the default printer, print a file from the home folder or an open USB drive, print a test page, cancel your jobs",
+    "appdata.read": "This app's own data folder: list and read (installed web apps only)",
+    "appdata.write": "This app's own data folder: write, make folders, delete (installed web apps only)"
   },
   "methods": {
     "api.methods": {
@@ -2461,6 +2463,165 @@
       "result": {
         "type": "object"
       }
+    },
+    "appdata.list": {
+      "description": "Entries of a folder in the calling web app's own data folder (~/.local/share/grokbot/app-data/<app id>/), plus used bytes and quota. Only installed web apps; the app is identified by its origin.",
+      "capability": "appdata.read",
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Path inside the calling app's own data folder, e.g. todos.json or /notes/a.txt (\"/\" is the folder). '..', '.' and symlinks are refused."
+          }
+        },
+        "required": [],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      },
+      "scope": "app-data",
+      "access": "read",
+      "x-title": [
+        "앱 데이터 보기",
+        "List app data"
+      ]
+    },
+    "appdata.read": {
+      "description": "Read a file from the calling app's own data folder. Max 16 MB.",
+      "capability": "appdata.read",
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Path inside the calling app's own data folder, e.g. todos.json or /notes/a.txt (\"/\" is the folder). '..', '.' and symlinks are refused."
+          },
+          "encoding": {
+            "enum": [
+              "utf-8",
+              "base64"
+            ]
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      },
+      "scope": "app-data",
+      "access": "read",
+      "x-title": [
+        "앱 데이터 읽기",
+        "Read app data"
+      ]
+    },
+    "appdata.write": {
+      "description": "Write a file in the calling app's own data folder, atomically (replaces by default; overwrite=false refuses). parents (default true) creates missing folders. Max 16 MB per file, 100 MB per app.",
+      "capability": "appdata.write",
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Path inside the calling app's own data folder, e.g. todos.json or /notes/a.txt (\"/\" is the folder). '..', '.' and symlinks are refused."
+          },
+          "data": {
+            "type": "string",
+            "maxLength": 23000000
+          },
+          "encoding": {
+            "enum": [
+              "utf-8",
+              "base64"
+            ]
+          },
+          "overwrite": {
+            "type": "boolean"
+          },
+          "parents": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path",
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      },
+      "scope": "app-data",
+      "access": "write",
+      "x-title": [
+        "앱 데이터 저장",
+        "Save app data"
+      ]
+    },
+    "appdata.mkdir": {
+      "description": "Make a folder (and its parents) in the calling app's own data folder.",
+      "capability": "appdata.write",
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Path inside the calling app's own data folder, e.g. todos.json or /notes/a.txt (\"/\" is the folder). '..', '.' and symlinks are refused."
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      },
+      "scope": "app-data",
+      "access": "write",
+      "x-title": [
+        "앱 데이터 폴더 만들기",
+        "Make app data folder"
+      ]
+    },
+    "appdata.delete": {
+      "description": "Delete a file or (recursive=true) a folder in the calling app's own data folder. Symlinks are removed, never followed.",
+      "capability": "appdata.write",
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "maxLength": 4096,
+            "description": "Path inside the calling app's own data folder, e.g. todos.json or /notes/a.txt (\"/\" is the folder). '..', '.' and symlinks are refused."
+          },
+          "recursive": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      },
+      "scope": "app-data",
+      "access": "write",
+      "x-title": [
+        "앱 데이터 삭제",
+        "Delete app data"
+      ]
     }
   },
   "x-scopes": {
@@ -2522,6 +2683,11 @@
     "screen": {
       "ko": "화면 캡처",
       "en": "Screen capture",
+      "always_ask": false
+    },
+    "app-data": {
+      "ko": "이 앱 전용 데이터 폴더",
+      "en": "This app's own data folder",
       "always_ask": false
     },
     "files": {

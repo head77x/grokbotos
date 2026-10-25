@@ -64,6 +64,8 @@ prompt. See "Permission model" below and the threat model in
 | `permissions.set` | `permissions` write | `permissions.write` | Store a mode for one caller and one scope. Always shows the consent prompt. camera, microphone and power cannot be set to allow. |
 | `permissions.revoke` | `permissions` write | `permissions.write` | Remove stored grants of a caller (one scope, or all). The caller falls back to the system default. |
 | `permissions.request` | (none) write | (none) | Ask the user to grant the calling origin one scope. Shows the consent prompt. Answers: Always (stored allow), This session (allow in memory until grokbotd stops), Deny (stored deny). For camera, microphone and power: Allow (stored ask, so each use still prompts) or Deny. Result `{mode, until}` (`until`: `always` or `session`). Rate-limited. |
+| `appdata.list` / `appdata.read` | `app-data` read | `appdata.read` | The calling installed app's own folder `~/.local/share/grokbot/app-data/<id>/` (paths relative to it). Read max 16 MB |
+| `appdata.write` / `appdata.mkdir` / `appdata.delete` | `app-data` write | `appdata.write` | Atomic write (`overwrite` default true, `parents` default true), new folder, delete (`recursive`). 16 MB per file, 100 MB / 5000 entries per app |
 | `files.list` | `files` read | `files.read` | Entries of a home-folder directory (`path`, default `/` = `~`): name, path, type, size, mtime, mime, writable. Hidden entries are left out and counted |
 | `files.stat` | `files` read | `files.read` | One entry |
 | `files.read` | `files` read | `files.read` | File content (max 16 MB), `encoding` `utf-8` (default) or `base64` |
@@ -89,6 +91,8 @@ prompt. See "Permission model" below and the threat model in
 | `audit.list` | `audit` read | `audit.read` | Recent audit log entries, newest last. Filters: principal, decision, method. |
 
 Wired and VPN profiles are system NetworkManager connections. `/usr/share/polkit-1/rules.d/50-grokbot-network.rules` lets the active local session user change them (`settings.modify.system`; hostname and global DNS stay admin-only); grokbotd asks before each change.
+
+**App-data scope rules.** The app is identified by the calling origin (`<id>.app.localhost`); only installed web apps get `app-data`, with no prompt, unless the user denied it. Local callers are denied. Paths with `..`, `.`, NUL, backslash or over-long names are refused and every component is opened with `O_NOFOLLOW`, so symlinks cannot escape. `apps.uninstall` deletes the folder unless `keep_data`. JS helper: `/_grokbot/appdata.js` (`GrokAppData`).
 
 **Files scope rules.** Paths are relative to the home folder (`/Documents/a.txt`, `~/Documents/a.txt` and `Documents/a.txt` are the same). Refused: `..`, any path that resolves outside `~` (symlinks included), and every hidden component (`.config`, `.local`, `.ssh`, ...), so a `files` grant can never read or rewrite grants, keys or other apps' data. Seeing (`files`) and changing (`files-write`) are separate scopes with separate grants.
 

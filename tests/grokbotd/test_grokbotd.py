@@ -272,7 +272,8 @@ class DaemonTests(Base):
     def test_unix_all_methods(self):
         with open(SCHEMA) as f:
             names = [n for n, s in json.load(f)["methods"].items()
-                     if s.get("access") == "read" and not s["params"].get("required")]
+                     if s.get("access") == "read" and not s["params"].get("required")
+                     and not n.startswith("appdata.")]  # app-data: installed web apps only
         for m in names:
             r = self.rpc_unix(m, {"timeout": 0} if m == "media.keys.wait" else None)
             self.assertIn("result", r, (m, r))
