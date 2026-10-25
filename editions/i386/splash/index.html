@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<title>Grok Bot OS i386</title>
+<link rel="stylesheet" href="../design/tokens.css">
+<link rel="stylesheet" href="../design/base.css">
+<style>
+ body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+      background:var(--gb-bg);color:var(--gb-text);font-family:"NanumGothic",sans-serif;gap:18px}
+ #face{width:184px;height:184px} #face svg{width:100%;height:100%}
+ h1{font-size:22px;font-weight:600;margin:0} p{margin:0;color:var(--gb-text-2);font-size:14px}
+ a.go{margin-top:8px;padding:10px 22px;border-radius:999px;background:var(--gb-accent-fill);color:var(--gb-on-accent);
+      text-decoration:none;font-size:15px}
+ input{margin-top:6px;width:320px;padding:9px 12px;border-radius:10px;border:1px solid var(--gb-line-strong);
+       background:var(--gb-surface);color:var(--gb-text);font-size:15px}
+ small{color:var(--gb-text-3);font-size:12px}
+</style></head>
+<body>
+ <div id="face"></div>
+ <h1>Grok Bot</h1>
+ <p>32비트 에디션 · 브라우저 전용 / 32-bit edition · browser only</p>
+ <a class="go" id="go" href="https://grok.com/">Grok Bot 열기 / Open Grok Bot</a>
+ <input id="memo" placeholder="한글 입력 테스트 (Shift+Space 또는 한/영)">
+ <small>Shift+Space 또는 한/영 키로 한글 전환 · Hangul: Shift+Space / Hangul key</small>
+ <script src="../design/mascot.js"></script>
+ <script src="splash.js"></script>
+</body></html>

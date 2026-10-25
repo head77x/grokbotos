@@ -1,0 +1,12 @@
+#!/bin/sh
+# Software rendering (pixman) works on old GPUs (nw8000 Radeon 9600 / r300)
+# and in QEMU; set GROKBOT_GPU=1 in /etc/default/grokbot to try GLES2.
+[ -f /etc/default/grokbot ] && . /etc/default/grokbot
+[ "${GROKBOT_GPU:-0}" = 1 ] || export WLR_RENDERER=pixman
+export WLR_NO_HARDWARE_CURSORS=1
+export XDG_CURRENT_DESKTOP=sway XDG_SESSION_TYPE=wayland
+export MOZ_ENABLE_WAYLAND=1
+export GTK_IM_MODULE=fcitx QT_IM_MODULE=fcitx XMODIFIERS=@im=fcitx
+export LANG=ko_KR.UTF-8
+mkdir -p "$HOME/.cache"
+exec dbus-run-session sway >"$HOME/.cache/grokbot-session.log" 2>&1
