@@ -1,0 +1,35 @@
+# Grok Bot OS i386 kiosk: one browser, no desktop icons, small status bar.
+set $mod Mod4
+font pango:NanumGothic 10
+output * bg #0a0a0b solid_color
+default_border none
+default_floating_border normal
+hide_edge_borders both
+input type:keyboard xkb_layout us
+input type:touchpad {
+  tap enabled
+  natural_scroll disabled
+}
+exec fcitx5 -d --replace
+exec firefox-esr file:///usr/share/grokbot/splash/index.html
+# keep a browser running: relaunch if the user closed it
+exec sh -c 'while sleep 3; do pgrep -x firefox-esr >/dev/null || firefox-esr file:///usr/share/grokbot/splash/index.html; done'
+bindsym $mod+Return exec firefox-esr --new-window
+bindsym Ctrl+Alt+t exec foot
+bindsym $mod+q kill
+bindsym $mod+Shift+e exec swaynag -t warning -m '세션을 끝낼까요? / End session?' -B '종료 / Power off' 'systemctl poweroff' -B '다시 시작 / Reboot' 'systemctl reboot'
+bindsym XF86AudioRaiseVolume exec wpctl set-volume @DEFAULT_SINK@ 5%+
+bindsym XF86AudioLowerVolume exec wpctl set-volume @DEFAULT_SINK@ 5%-
+bar {
+  position bottom
+  height 22
+  status_command /usr/local/bin/grokbot-status
+  font pango:NanumGothic 9
+  workspace_buttons no
+  tray_output none
+  colors {
+    background #121214
+    statusline #a3a3a3
+    separator #121214
+  }
+}

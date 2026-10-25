@@ -1,0 +1,15 @@
+#!/bin/sh
+# swaybar status: Wi-Fi · battery · clock, kept small at the end of the bar.
+while :; do
+  wifi=""; for d in /sys/class/net/*/wireless; do
+    [ -e "$d" ] || continue; n=${d%/wireless}; n=${n##*/}
+    s=$(iw dev "$n" link 2>/dev/null | sed -n 's/^\s*SSID: //p')
+    wifi="Wi-Fi ${s:-끊김}"; done
+  bat=""; for b in /sys/class/power_supply/BAT*; do
+    [ -e "$b/capacity" ] || continue
+    c=$(cat "$b/capacity"); st=$(cat "$b/status")
+    [ "$st" = Charging ] && bat="충전 $c%" || bat="배터리 $c%"; done
+  out=""; [ -n "$wifi" ] && out="$wifi   "; [ -n "$bat" ] && out="$out$bat   "
+  echo "$out$(date '+%-m월 %-d일 %H:%M')"
+  sleep 20
+done

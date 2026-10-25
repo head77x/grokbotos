@@ -127,7 +127,9 @@ Omarchy 4의 Reset Computer와 설치 때 새 주인에게 넘기는 흐름에�
 
 ## Phase H — 32비트(i386) 레거시 에디션 (나중에, 별도 브랜치)
 
-상태: **시작 안 함**. 메인 이미지와 분리된 브랜치/에디션으로 나중에 따로 개발한다.
+상태: **진행 중** (2026-10-25). 장기 브랜치 `edition/i386`에서 개발하며 `main`에는 합치지 않는다. 빌드와 설계는 그 브랜치의 `editions/i386/README.md`를 본다.
+
+- 베이스: Debian 12 bookworm i386 (trixie는 i386 커널이 없음), non-PAE `linux-image-686`, sway(pixman) + Firefox ESR + fcitx5-hangul, 라이브 ISO.
 
 - **동기:** 20년 가까이 된 PC에서도 Grok Bot을 쓰게 한다. 예: HP Compaq nw8000 (Pentium M, 32비트, 최대 RAM 2GB).
 - **방식:** 32비트 베이스(예: Debian i386) 위에 브라우저만 있는 가벼운 키오스크. Firefox가 Grok Bot 웹 앱을 띄운다. Fedora와 Chromium/Electron은 32비트 지원을 끊었기 때문이다.
