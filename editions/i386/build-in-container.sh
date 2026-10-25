@@ -31,7 +31,7 @@ chroot $R apt-get install -y --no-install-recommends \
   firefox-esr firefox-esr-l10n-ko \
   fcitx5 fcitx5-hangul fcitx5-frontend-gtk3 fcitx5-frontend-gtk4 fcitx5-config-qt- \
   network-manager iw wpasupplicant pipewire pipewire-pulse wireplumber \
-  acpi-support-base acpid upower ca-certificates $fw
+  zram-tools acpi-support-base acpid upower ca-certificates $fw
 sed -i 's/^# *ko_KR.UTF-8/ko_KR.UTF-8/; s/^# *en_US.UTF-8/en_US.UTF-8/' $R/etc/locale.gen
 chroot $R locale-gen
 echo LANG=ko_KR.UTF-8 > $R/etc/default/locale

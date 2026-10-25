@@ -15,6 +15,7 @@ This is Roadmap Phase H: a browser-only Grok Bot for old 32-bit PCs
 | Home | local splash `file:///usr/share/grokbot/splash/` | Shows the Grok Bot face (`/_grokbot/` `mascot.js`, shared with main) and an "Open Grok Bot" button to `https://grok.com/`. No SpaceXAI logos. |
 | Bar | swaybar at the bottom, status script | No icons. Wi-Fi · battery · clock, small, at the right end. |
 | Korean | `fcitx5` + `fcitx5-hangul`, GTK3/4 frontends | Toggle with **Shift+Space**, **Hangul (한/영)** or Ctrl+Space. Works in Firefox through the GTK IM module. |
+| Memory | `zram-tools` (zstd, 60% of RAM) | No disk swap on a live system. At 1 GB, Firefox with grok.com open left about 70 MB free before zram was added. |
 | Fonts | `fonts-nanum` (≈20 MB, much smaller than Noto CJK) | |
 | Network | NetworkManager (`nmcli`/`nmtui` from foot) | Intel 2200BG firmware (`firmware-ipw2x00`) included; build with `WIFI_FW=0` to leave out non-free firmware. |
 
@@ -48,11 +49,26 @@ sudo WIFI_FW=0 editions/i386/build.sh  # without non-free Wi-Fi firmware
 ```sh
 qemu-system-i386 -accel tcg -cpu coreduo,-pae,-vmx -m 1024 -smp 1 \
   -cdrom editions/i386/out/grokbot-os-i386.iso -boot d \
-  -vga std -nic user,model=e1000 -usb -device usb-tablet
+  -device virtio-vga,xres=1024,yres=768 -nic user,model=e1000 -usb -device usb-tablet
 ```
+
+Use `virtio-vga`. With `-vga std` (bochs-drm) sway fails: wlroots 0.16 reports
+"PRIME import not supported" and cannot create the DRM backend.
+`sudo DEBUG=1 editions/i386/build.sh` adds `console=ttyS0` and a root debug shell
+on the serial port, for test builds only. Never ship a DEBUG build.
 
 `coreduo,-pae` gives a Pentium-M-like CPU: SSE2 (Firefox needs it) but no PAE, so it
 proves the non-PAE kernel boots. CPUs without SSE2 (Pentium III and older) cannot run Firefox.
+
+## Measured (QEMU TCG, `-m 1024`, 2026-10-25)
+
+| | |
+|---|---|
+| ISO | 428 MiB (`grokbot-os-i386.iso`) |
+| Root filesystem (uncompressed) | 1.3 GB |
+| RAM after boot, splash page open | ~395 MB used of 997 MB |
+| RAM with grok.com open | ~844–924 MB used (before zram) |
+| Live overlay (tmpfs) | ~120 MB |
 
 ## Real hardware (nw8000)
 
