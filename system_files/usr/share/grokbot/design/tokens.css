@@ -1,0 +1,54 @@
+/* Grok Bot OS design tokens. Dark first; light via prefers-color-scheme.
+   Shared by every system web app at /_grokbot/tokens.css (same origin). */
+:root {
+  color-scheme: dark;
+  --gb-bg: #0a0a0b;            /* page */
+  --gb-chrome: #121214;        /* sidebars, bars */
+  --gb-surface: #18181b;       /* cards */
+  --gb-elevated: #222226;      /* menus, dialogs */
+  --gb-hover: rgba(255,255,255,.06);
+  --gb-active: rgba(255,255,255,.11);
+  --gb-line: rgba(255,255,255,.09);
+  --gb-line-strong: rgba(255,255,255,.16);
+  --gb-text: #f2f2f2;
+  --gb-text-2: rgba(255,255,255,.64);
+  --gb-text-3: rgba(255,255,255,.45);
+  --gb-accent: #64b5ff;
+  --gb-accent-fill: #2f8cff;
+  --gb-on-accent: #ffffff;
+  --gb-success: #4cc79b;
+  --gb-warning: #e8a33d;
+  --gb-danger: #ff6b5e;
+  --gb-focus: 0 0 0 2px var(--gb-bg), 0 0 0 4px var(--gb-accent);
+  /* character coats (our own palette) */
+  --gb-coat-blue: #4c8dff; --gb-coat-violet: #8b6cf6; --gb-coat-mint: #3fc2a6;
+  --gb-coat-coral: #ff7a59; --gb-coat-amber: #f2b33d; --gb-coat-rose: #f0559b;
+  /* type */
+  --gb-font: "Noto Sans CJK KR", "Noto Sans KR", "Noto Sans", system-ui, sans-serif;
+  --gb-mono: "Noto Sans Mono CJK KR", "Noto Sans Mono", ui-monospace, monospace;
+  --gb-fs-xs: 12px; --gb-fs-sm: 13px; --gb-fs-md: 15px; --gb-fs-lg: 18px; --gb-fs-xl: 24px; --gb-fs-2xl: 32px;
+  /* shape */
+  --gb-r-sm: 8px; --gb-r-md: 12px; --gb-r-lg: 16px; --gb-r-xl: 22px; --gb-r-full: 999px;
+  --gb-s1: 4px; --gb-s2: 8px; --gb-s3: 12px; --gb-s4: 16px; --gb-s5: 24px; --gb-s6: 32px;
+  --gb-shadow-1: 0 1px 2px rgba(0,0,0,.4);
+  --gb-shadow-2: 0 8px 28px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.04) inset;
+  /* motion */
+  --gb-ease: cubic-bezier(.22,1,.36,1);
+  --gb-spring: cubic-bezier(.2,.9,.3,1.15);
+  --gb-fast: 140ms; --gb-mid: 280ms; --gb-slow: 600ms;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --gb-bg: #fbfbfb; --gb-chrome: #f4f4f5; --gb-surface: #ffffff; --gb-elevated: #ffffff;
+    --gb-hover: rgba(0,0,0,.04); --gb-active: rgba(0,0,0,.08);
+    --gb-line: rgba(0,0,0,.09); --gb-line-strong: rgba(0,0,0,.16);
+    --gb-text: #0a0a0a; --gb-text-2: rgba(0,0,0,.62); --gb-text-3: rgba(0,0,0,.5);
+    --gb-accent: #0a6fe0; --gb-accent-fill: #0a6fe0;
+    --gb-success: #1f8a65; --gb-warning: #9a5b00; --gb-danger: #c0362c;
+    --gb-shadow-2: 0 8px 28px rgba(0,0,0,.12);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root { --gb-fast: 0ms; --gb-mid: 0ms; --gb-slow: 0ms; }
+}

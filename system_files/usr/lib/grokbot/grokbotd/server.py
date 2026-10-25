@@ -228,6 +228,8 @@ CSP = ("default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' 
        "media-src 'self' blob:; connect-src 'self'; font-src 'self'; manifest-src 'self'; "
        "worker-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 
+DESIGN_PREFIX = "/_grokbot/"
+
 
 def webapp_file(host, path):
     """Absolute file for GET path on host, or None. No traversal, no
@@ -239,6 +241,11 @@ def webapp_file(host, path):
     if root is None:
         return None
     rel = path.split("?", 1)[0].split("#", 1)[0]
+    if rel.startswith(DESIGN_PREFIX):
+        # Shared design system (tokens, base components, the character),
+        # read-only from the image, same origin for every app so the CSP holds.
+        root = os.path.realpath(paths.design_dir())
+        rel = rel[len(DESIGN_PREFIX) - 1:]
     if rel.endswith("/"):
         rel += "index.html"
     parts = [x for x in rel.split("/") if x]

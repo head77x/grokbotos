@@ -94,6 +94,7 @@ class Base(unittest.TestCase):
             "GROKBOT_DESKTOP_SYS_CONF": os.path.join(SF, "etc", "grokbot", "desktop.conf"),
             "GROKBOT_API_PORT": str(cls.port),
             "GROKBOT_WEBAPPS_DIR": os.path.join(SF, "usr", "share", "grokbot", "webapps"),
+            "GROKBOT_DESIGN_DIR": os.path.join(SF, "usr", "share", "grokbot", "design"),
             "GROKBOT_UPDATE_RUN": os.path.join(t, "run-update"),
             "GROKBOT_HEALTH_DIR": os.path.join(t, "health"),
             # urllib stands in for the browser; OriginPeerTests turns this off.

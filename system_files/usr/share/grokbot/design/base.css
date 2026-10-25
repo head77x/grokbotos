@@ -1,0 +1,49 @@
+/* Grok Bot OS base components. Apps load tokens.css then this file. */
+@import url("tokens.css");
+:root { /* legacy aliases used by app CSS */
+  --bg: var(--gb-bg); --panel: var(--gb-surface); --line: var(--gb-line); --fg: var(--gb-text);
+  --dim: var(--gb-text-2); --acc: var(--gb-accent-fill); --bad: var(--gb-danger); --ok: var(--gb-success); --warn: var(--gb-warning);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--gb-bg); color: var(--gb-text);
+  font: var(--gb-fs-md)/1.55 var(--gb-font); -webkit-font-smoothing: antialiased; }
+:lang(ko) { word-break: keep-all; }
+h1, h2, h3 { letter-spacing: -0.015em; font-weight: 700; }
+header { display: flex; align-items: center; gap: var(--gb-s3); padding: 12px 20px; background: var(--gb-chrome);
+  border-bottom: 1px solid var(--gb-line); }
+header h1 { font-size: var(--gb-fs-lg); margin: 0; }
+header > img { border-radius: 9px; }
+.grow { flex: 1; }
+.dim { color: var(--gb-text-2); font-size: var(--gb-fs-sm); }
+a { color: var(--gb-accent); }
+button, input, textarea, select { font: inherit; color: var(--gb-text); }
+button { background: var(--gb-hover); border: 1px solid var(--gb-line); border-radius: var(--gb-r-sm);
+  padding: 6px 13px; cursor: pointer; transition: background var(--gb-fast) var(--gb-ease), border-color var(--gb-fast), transform var(--gb-fast) var(--gb-ease); }
+button:hover { background: var(--gb-active); border-color: var(--gb-line-strong); }
+button:active { transform: scale(.97); }
+button:disabled, button:disabled:hover { opacity: .42; cursor: default; background: var(--gb-hover); border-color: var(--gb-line); transform: none; }
+button.primary { background: var(--gb-accent-fill); border-color: transparent; color: var(--gb-on-accent); font-weight: 600; }
+button.primary:hover { filter: brightness(1.08); background: var(--gb-accent-fill); }
+button.danger { color: var(--gb-danger); }
+input[type=text], input[type=search], input[type=password], textarea, select {
+  background: var(--gb-bg); border: 1px solid var(--gb-line-strong); border-radius: var(--gb-r-sm); padding: 7px 11px;
+  transition: border-color var(--gb-fast), box-shadow var(--gb-fast); }
+input:focus, textarea:focus, select:focus { outline: none; border-color: var(--gb-accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--gb-accent) 25%, transparent); }
+button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: none; box-shadow: var(--gb-focus); }
+::placeholder { color: var(--gb-text-3); }
+.card, .need { background: var(--gb-surface); border: 1px solid var(--gb-line); border-radius: var(--gb-r-lg); box-shadow: var(--gb-shadow-1); }
+.need { margin: 40px auto; max-width: 520px; padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start;
+  animation: gb-enter var(--gb-mid) var(--gb-spring) both; }
+.need .gb-mascot { width: 56px; height: 56px; }
+.pill { font-size: var(--gb-fs-xs); padding: 2px 10px; border-radius: var(--gb-r-full); background: var(--gb-hover); border: 1px solid var(--gb-line); }
+.pill.ok, .pill.allow, .pill.allowd { color: var(--gb-success); background: color-mix(in srgb, var(--gb-success) 14%, transparent); border-color: transparent; }
+.pill.warn, .pill.ask, .pill.error { color: var(--gb-warning); background: color-mix(in srgb, var(--gb-warning) 14%, transparent); border-color: transparent; }
+.pill.deny { color: var(--gb-text-2); }
+.pill.denyd { color: var(--gb-danger); background: color-mix(in srgb, var(--gb-danger) 14%, transparent); border-color: transparent; }
+.toast, #toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); background: var(--gb-elevated); color: var(--gb-text);
+  border: 1px solid var(--gb-line-strong); padding: 10px 18px; border-radius: var(--gb-r-md); box-shadow: var(--gb-shadow-2); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--gb-active); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+@keyframes gb-enter { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
+.gb-enter { animation: gb-enter var(--gb-mid) var(--gb-spring) both; }
+.hidden { display: none !important; }

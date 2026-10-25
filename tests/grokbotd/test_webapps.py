@@ -39,6 +39,19 @@ class WebappTests(tg.Base):
         self.assertEqual(self.get("evil.app.localhost:%d" % self.port, "/")[0], 404)
         self.assertEqual(self.get("settings.example.com:%d" % self.port, "/")[0], 403)
 
+    def test_shared_design_system_same_origin(self):
+        for app in ("settings", "files", "notes"):
+            host = "%s.app.localhost:%d" % (app, self.port)
+            code, h, body = self.get(host, "/_grokbot/tokens.css")
+            self.assertEqual((code, h["Content-Type"]), (200, "text/css; charset=utf-8"))
+            self.assertIn(b"--gb-bg", body)
+            self.assertIn("style-src 'self'", h["Content-Security-Policy"])
+        host = "settings.app.localhost:%d" % self.port
+        self.assertEqual(self.get(host, "/_grokbot/base.css")[0], 200)
+        for path in ("/_grokbot/../webapps/settings/app.js", "/_grokbot/", "/_grokbot/.x.css", "/_grokbot/nope.css"):
+            self.assertEqual(self.get(host, path)[0], 404, path)
+        self.assertEqual(self.get("evil.app.localhost:%d" % self.port, "/_grokbot/tokens.css")[0], 404)
+
     def test_same_origin_fetch_without_origin_header(self):
         o = "http://settings.app.localhost:%d" % self.port
         self.grant({})

@@ -2,15 +2,15 @@
 #crumbs { display:flex; flex-wrap:wrap; gap:2px; align-items:center; }
 #crumbs button { background:transparent; border-color:transparent; padding:3px 7px; }
 #crumbs .sep { color:var(--dim); }
-.pill { font-size:12px; padding:2px 10px; border-radius:999px; background:#27272a; }
-.pill.ok { background:#14532d; } .pill.warn { background:#78350f; }
+.pill { font-size:12px; padding:2px 10px; border-radius:999px; background:var(--gb-active); }
+.pill.ok { background:color-mix(in srgb, var(--gb-success) 18%, transparent); } .pill.warn { background:color-mix(in srgb, var(--gb-warning) 18%, transparent); }
 #wrap { flex:1; display:flex; min-height:0; }
 #main { flex:1; overflow:auto; padding:6px 12px 20px; min-width:0; }
 table { width:100%; border-collapse:collapse; }
 th { text-align:left; color:var(--dim); font-weight:600; font-size:13px; padding:6px 8px; border-bottom:1px solid var(--line); }
-td { padding:6px 8px; border-bottom:1px solid #1d1d21; white-space:nowrap; }
-tr.row:hover td { background:#18181d; }
-tr.row.sel td { background:#1e3a5f; }
+td { padding:6px 8px; border-bottom:1px solid var(--gb-line); white-space:nowrap; }
+tr.row:hover td { background:var(--gb-hover); }
+tr.row.sel td { background:color-mix(in srgb, var(--gb-accent) 20%, transparent); }
 td.name { width:100%; max-width:0; overflow:hidden; text-overflow:ellipsis; cursor:pointer; }
 td.name i { font-style:normal; display:inline-block; width:24px; }
 td.act { text-align:right; }
@@ -24,3 +24,14 @@ td.act button { padding:2px 8px; font-size:13px; margin-left:4px; }
 .empty { text-align:center; color:var(--dim); padding:40px; }
 #crumbs button.on { border-color:var(--line, #444); font-weight:600; }
 #crumbs .eject { padding:3px 4px; }
+/* design system polish */
+.bar { background:var(--gb-bg); padding:10px 20px; }
+#crumbs button { border-radius:var(--gb-r-full); padding:3px 10px; }
+#crumbs button.on { background:var(--gb-active); border-color:transparent; }
+th { color:var(--gb-text-3); font-weight:600; font-size:var(--gb-fs-xs); text-transform:uppercase; letter-spacing:.04em; }
+td { border-bottom:1px solid var(--gb-line); }
+tr.row td { transition:background var(--gb-fast); }
+tr.row:hover td { background:var(--gb-hover); }
+#vbody textarea { font-family:var(--gb-mono); }
+.empty { display:flex; flex-direction:column; align-items:center; gap:12px; padding:56px 20px; }
+.empty .gb-mascot { width:72px; height:72px; }

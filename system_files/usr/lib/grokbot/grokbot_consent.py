@@ -69,26 +69,40 @@ def lines(req):
 
 
 CSS = b"""
+/* Grok Bot OS design tokens (see /usr/share/grokbot/design/tokens.css). */
+@define-color gb_surface #18181b;
+@define-color gb_text #f2f2f2;
+@define-color gb_text2 #a3a3a3;
+@define-color gb_text3 #8a8a8a;
+@define-color gb_accent #2f8cff;
+@define-color gb_warning #e8a33d;
+@define-color gb_danger #ff6b5e;
 window.grokbot-consent { background-color: rgba(0,0,0,0); }
-.card { background-color: #18181b; border: 2px solid #f59e0b; border-radius: 16px; padding: 22px; color: #f4f4f5; }
-.card.sensitive { border-color: #ef4444; }
+.card { background-color: @gb_surface; border: 1px solid alpha(@gb_warning, 0.55); border-radius: 22px;
+  padding: 24px 26px; color: @gb_text; box-shadow: 0 18px 48px rgba(0,0,0,0.55); margin: 24px; }
+.card.sensitive { border-color: alpha(@gb_danger, 0.7); }
 .title { font-size: 20px; font-weight: bold; }
-.key { color: #a1a1aa; font-size: 12px; }
+.key { color: @gb_text3; font-size: 11px; font-weight: bold; margin-top: 4px; }
 .val { font-size: 15px; }
-.en { color: #a1a1aa; font-size: 12px; }
-.call { font-family: monospace; font-size: 11px; color: #71717a; }
-button { padding: 8px 14px; border-radius: 10px; }
-button.deny { background: #3f3f46; color: #fff; }
-button.allow { background: #2563eb; color: #fff; }
-entry.secret { font-size: 16px; padding: 6px 8px; }
-button.always { background: #1d4ed8; color: #fff; }
-.timer { color: #a1a1aa; font-size: 12px; }
-button.session { background: #1e40af; color: #fff; }
+.en { color: @gb_text2; font-size: 12px; }
+.call { font-family: "Noto Sans Mono", monospace; font-size: 11px; color: @gb_text3;
+  background-color: rgba(255,255,255,0.05); border-radius: 8px; padding: 4px 8px; }
+button { padding: 9px 16px; border-radius: 12px; background-image: none; box-shadow: none; text-shadow: none;
+  color: @gb_text; background-color: rgba(255,255,255,0.08); }
+button:hover { background-color: rgba(255,255,255,0.14); }
+button.deny { background-color: rgba(255,255,255,0.08); color: @gb_text; }
+button.allow, button.always { background-color: @gb_accent; color: #ffffff; font-weight: bold; }
+button.allow:hover, button.always:hover { background-color: shade(@gb_accent, 1.1); }
+button.session { background-color: alpha(@gb_accent, 0.22); color: #cfe6ff; }
+entry.secret { font-size: 16px; padding: 8px 10px; border-radius: 10px; background-color: #0a0a0b;
+  color: @gb_text; border: 1px solid rgba(255,255,255,0.18); }
+entry.secret:focus { border-color: @gb_accent; }
+.timer { color: @gb_text3; font-size: 12px; }
 /* Keyboard focus must be obvious: Tab moves between Deny / Allow buttons. */
-button { border: 3px solid transparent; outline: none; }
-button:focus { border-color: #fbbf24; box-shadow: 0 0 0 3px rgba(251,191,36,0.45); }
-.warn { color: #fbbf24; font-size: 14px; font-weight: bold; }
-.warn-en { color: #fbbf24; font-size: 12px; }
+button { border: 2px solid transparent; outline: none; }
+button:focus { border-color: @gb_warning; box-shadow: 0 0 0 3px alpha(@gb_warning, 0.40); }
+.warn { color: @gb_warning; font-size: 14px; font-weight: bold; }
+.warn-en { color: @gb_warning; font-size: 12px; }
 """
 
 
