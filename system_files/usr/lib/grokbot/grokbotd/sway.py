@@ -33,6 +33,28 @@ def socket_path():
     return cands[0]
 
 
+def session_env():
+    """os.environ plus the graphical session's SWAYSOCK and WAYLAND_DISPLAY.
+
+    grokbotd is a systemd user service that usually starts before sway has
+    imported those into the user manager, so they are missing from its own
+    environment. Children that open windows or call swaymsg (grokbot-webapp,
+    grokbot-run, the consent prompt, swaylock) need them, or they fail
+    silently and nothing appears on screen."""
+    env = dict(os.environ)
+    if not (env.get("SWAYSOCK") and os.path.exists(env["SWAYSOCK"])):
+        try:
+            env["SWAYSOCK"] = socket_path()
+        except SwayUnavailable:
+            env.pop("SWAYSOCK", None)
+    if not env.get("WAYLAND_DISPLAY"):
+        socks = sorted(os.path.basename(p) for p in glob.glob(os.path.join(paths.runtime_dir(), "wayland-*"))
+                       if not p.endswith(".lock"))
+        if socks:
+            env["WAYLAND_DISPLAY"] = socks[0]
+    return env
+
+
 def _recv(s, n):
     buf = b""
     while len(buf) < n:

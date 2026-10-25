@@ -51,7 +51,7 @@ class InstallerTests(tg.Base):
         cls.side = tempfile.TemporaryDirectory()
         fake = os.path.join(cls.side.name, "fake-webapp")
         with open(fake, "w") as f:
-            f.write('#!/bin/bash\necho "$*" >>"%s/launch.log"\n' % cls.side.name)
+            f.write('#!/bin/bash\necho "$* sock=${SWAYSOCK:-none} wl=${WAYLAND_DISPLAY:-none}" >>"%s/launch.log"\n' % cls.side.name)
         os.chmod(fake, 0o755)
         os.environ["GROKBOT_WEBAPP_BIN"] = fake
         try:
@@ -296,14 +296,25 @@ class InstallerTests(tg.Base):
 
     def test_launch(self):
         log = os.path.join(self.side.name, "launch.log")
+        # grokbotd starts before sway exports SWAYSOCK/WAYLAND_DISPLAY: the
+        # launched app must still get the live session's sockets.
+        run = self.env["XDG_RUNTIME_DIR"]
+        sock = os.path.join(run, "sway-ipc.1000.42.sock")
+        for p in (sock, os.path.join(run, "wayland-1"), os.path.join(run, "wayland-1.lock")):
+            open(p, "w").close()
+        self.addCleanup(lambda: [os.unlink(p) for p in (sock, os.path.join(run, "wayland-1"), os.path.join(run, "wayland-1.lock"))])
         r = self.rpc_unix("apps.launch", {"id": "sysmon"})
         self.assertEqual(r["result"]["app_id"], "grokbot-webapp-sysmon")
         for _ in range(50):
             if os.path.exists(log):
                 break
             time.sleep(0.05)
+        time.sleep(0.1)
         with open(log) as f:
-            self.assertIn("sysmon", f.read())
+            line = f.read()
+        self.assertIn("sysmon", line)
+        self.assertIn("sock=" + sock, line)
+        self.assertIn("wl=wayland-1", line)
         self.assertEqual(self.rpc_unix("apps.launch", {"id": "nope"})["error"]["code"], -32000)
 
     def test_webapp_script_print_and_usage(self):
