@@ -20,6 +20,9 @@ CX, CY, R = 46.0, 46.0, 27.6
 EYE_W, EYE_H = 6.9, 15.6
 EYE_L, EYE_R, EYE_Y = 37.45, 54.5, 46.0   # x 34.0-40.9 / 51.0-58.0, y 38.2-53.8
 BLINK_H = 3.2
+# The large hero avatar on x.ai/bot draws bigger eyes (measured from the
+# page at 253 px: x 31.5-42.2 / 50.0-60.7, y 34.5-57.5). hero=True uses them.
+HERO_W, HERO_H, HERO_L, HERO_R = 10.7, 23.0, 36.85, 55.35
 BLINK_S = 0.25
 INK, PAPER = "#0a0a0a", "#ffffff"
 COATS = {"orange": "#F19D38", "teal": "#54B9A6", "purple": "#885CF5",
@@ -42,7 +45,7 @@ def spring(age):
     return 1.0 - 0.15 * math.exp(-6.0 * a) * math.cos(12.0 * a)
 
 
-def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0, age=None):
+def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0, age=None, hero=False):
     """Geometry for mood. blink 0 (open)..1 (closed, eye h 3.2); look x/y in
     -1..1 (eyes lean/rotate toward x, body follows); t seconds drives the
     wobble; age seconds since the face appeared (spring settle)."""
@@ -53,6 +56,9 @@ def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0, age=None):
     bx = 0.8 * math.sin(t * 0.9) + lx * 2.0                 # body leans with eyes
     by = 0.8 * math.sin(t * 1.3)
     ew, eh, edy, spread, tilt = EYE_W, EYE_H, ly * 2.0, 0.0, 0.0
+    el, er = EYE_L, EYE_R
+    if hero:
+        ew, eh, el, er = HERO_W, HERO_H, HERO_L, HERO_R
     rot = lx * 12.0
     dim = 1.0
     if mood == "thinking":       # eyes up to the side, slow wobble
@@ -85,14 +91,15 @@ def face(mood="idle", blink=0.0, look=(0.0, 0.0), t=0.0, age=None):
         by = -4.0 * abs(math.sin(math.pi * t * 1.6))
         eh *= 0.94
     sc *= spring(age)
+    closed = BLINK_H * (HERO_H / EYE_H if hero else 1.0)
     if mood != "sleeping":
         b = _clamp(blink, 0.0, 1.0)
-        eh = eh - (eh - BLINK_H) * b
+        eh = eh - (eh - closed) * b
     else:
-        eh = BLINK_H * 0.75
+        eh = closed * 0.75
     ex = lx * 3.5
-    eyes = [(EYE_L - spread + ex, EYE_Y + edy, ew, eh, rot - tilt),
-            (EYE_R + spread + ex, EYE_Y + edy, ew, eh, rot + tilt)]
+    eyes = [(el - spread + ex, EYE_Y + edy, ew, eh, rot + tilt),
+            (er + spread + ex, EYE_Y + edy, ew, eh, rot - tilt)]
     return {"mood": mood, "body": (CX + bx, CY + by, R), "scale": sc, "eyes": eyes,
             "dim": dim, "label": LABELS[mood]}
 

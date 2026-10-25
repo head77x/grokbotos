@@ -11,6 +11,7 @@
   const MOODS = ["idle", "thinking", "listening", "happy", "alert", "error", "sleeping", "sad"];
   const CX = 46, CY = 46, R = 27.6, EYE_W = 6.9, EYE_H = 15.6, EYE_L = 37.45, EYE_R = 54.5, EYE_Y = 46;
   const BLINK_H = 3.2, BLINK_S = 0.25;
+  const HERO_W = 10.7, HERO_H = 23.0, HERO_L = 36.85, HERO_R = 55.35; // large avatar
   const LABELS = { idle: "", thinking: "생각 중… / Thinking…", listening: "듣는 중… / Listening…",
     happy: "완료 / Done", alert: "확인이 필요합니다 / Needs you",
     error: "문제가 생겼습니다 / Something went wrong", sleeping: "절전 / Resting", sad: "연결 안 됨 / Offline" };
@@ -24,11 +25,13 @@
     return 1 - 0.15 * Math.exp(-6 * a) * Math.cos(12 * a);
   }
 
-  function face(mood, blink, look, t, age) {
+  function face(mood, blink, look, t, age, hero) {
     if (MOODS.indexOf(mood) < 0) mood = "idle";
     let lx = clamp(look[0], -1, 1), ly = clamp(look[1], -1, 1);
     let sc = 1 + 0.03 * S(t * 2 * PI / 3.2), bx = 0.8 * S(t * 0.9) + lx * 2, by = 0.8 * S(t * 1.3);
     let ew = EYE_W, eh = EYE_H, edy = ly * 2, spread = 0, tilt = 0, rot = lx * 12, dim = 1;
+    let el = EYE_L, er = EYE_R;
+    if (hero) { ew = HERO_W; eh = HERO_H; el = HERO_L; er = HERO_R; }
     if (mood === "thinking") {
       lx = 0.8; ly = -0.7; rot = 12 + 3 * S(t * 1.1); edy = -3;
       bx = 2 + 1.2 * S(t * 0.7); sc = 1 + 0.02 * S(t * 2 * PI / 4.5);
@@ -47,11 +50,12 @@
       by = -4 * Math.abs(S(PI * t * 1.6)); eh *= 0.94;
     }
     sc *= spring(age);
-    if (mood !== "sleeping") eh = eh - (eh - BLINK_H) * clamp(blink, 0, 1);
-    else eh = BLINK_H * 0.75;
+    const closed = BLINK_H * (hero ? HERO_H / EYE_H : 1);
+    if (mood !== "sleeping") eh = eh - (eh - closed) * clamp(blink, 0, 1);
+    else eh = closed * 0.75;
     const ex = lx * 3.5;
     return { mood: mood, body: [CX + bx, CY + by, R], scale: sc, dim: dim, label: LABELS[mood],
-      eyes: [[EYE_L - spread + ex, EYE_Y + edy, ew, eh, rot - tilt], [EYE_R + spread + ex, EYE_Y + edy, ew, eh, rot + tilt]] };
+      eyes: [[el - spread + ex, EYE_Y + edy, ew, eh, rot + tilt], [er + spread + ex, EYE_Y + edy, ew, eh, rot - tilt]] };
   }
 
   function blinkAt(dt) { return dt < 0 || dt >= BLINK_S ? 0 : S(PI * dt / BLINK_S); }
@@ -82,7 +86,8 @@
 
   function create(mood, label, opts) {
     const stateEl = opts && opts.labelEl; // optional text node next to the face
-    const svg = el("svg", { viewBox: "0 0 92 92", class: "gb-mascot", role: "img" });
+    const hero = !!(opts && opts.hero);    // large avatar proportions
+    const svg = el("svg", { viewBox: "0 0 92 92", class: hero ? "gb-mascot lg" : "gb-mascot", role: "img" });
     const title = el("title", {});
     svg.append(title);
     const g = el("g", {});
@@ -95,7 +100,7 @@
     const f2 = (n) => n.toFixed(2);
     function paint(t) {
       const [b, l] = reduce ? [0, [0, 0]] : life(t);
-      const fc = reduce ? face(cur, 0, [0, 0], 0, null) : face(cur, b, l, t, t - since);
+      const fc = reduce ? face(cur, 0, [0, 0], 0, null, hero) : face(cur, b, l, t, t - since, hero);
       const [cx, cy] = fc.body;
       g.setAttribute("transform", `translate(${f2(cx)} ${f2(cy)}) scale(${fc.scale.toFixed(4)}) translate(${f2(-cx)} ${f2(-cy)})`);
       g.setAttribute("opacity", fc.dim);

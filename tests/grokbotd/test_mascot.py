@@ -37,6 +37,9 @@ class MascotTest(unittest.TestCase):
                 self.assertLess(math.hypot(ex - cx, ey - cy) + h / 2, r, mood)
                 self.assertLessEqual(abs(deg), 18, mood)
         self.assertEqual(m.face("nope")["mood"], "idle")
+        h = m.face("idle", hero=True)["eyes"][0]
+        self.assertAlmostEqual(h[0] - h[2] / 2, 31.5, places=1)
+        self.assertAlmostEqual(h[1] - h[3] / 2, 34.5, places=1)
 
     def test_states_use_eyes_and_motion_only(self):
         self.assertAlmostEqual(m.face("idle", blink=1.0)["eyes"][0][3], 3.2)   # blink 15.6 -> 3.2
@@ -50,7 +53,7 @@ class MascotTest(unittest.TestCase):
         self.assertGreater(th[4], 5)                                           # and to the side
         sad = m.face("sad")["eyes"]
         self.assertGreater(sad[0][1], m.EYE_Y)                                 # droop
-        self.assertLess(sad[0][4], 0); self.assertGreater(sad[1][4], 0)        # tilt down
+        self.assertGreater(sad[0][4], 0); self.assertLess(sad[1][4], 0)        # tops lean in
         self.assertLess(m.face("error")["dim"], 1)
         hops = [m.face("happy", t=k / 10)["body"][1] for k in range(10)]
         self.assertLess(min(hops), 43)                                         # hop
@@ -106,7 +109,7 @@ class MascotTest(unittest.TestCase):
         js = open(JS, encoding="utf-8").read()
         moods = json.loads(re.search(r"const MOODS = (\[[^\]]*\])", js).group(1))
         self.assertEqual(tuple(moods), m.MOODS)
-        for name in ("CX", "CY", "R", "EYE_W", "EYE_H", "EYE_L", "EYE_R", "EYE_Y", "BLINK_H", "BLINK_S"):
+        for name in ("CX", "CY", "R", "EYE_W", "EYE_H", "EYE_L", "EYE_R", "EYE_Y", "BLINK_H", "BLINK_S", "HERO_W", "HERO_H", "HERO_L", "HERO_R"):
             v = float(re.search(r"\b%s = ([0-9.]+)" % name, js).group(1))
             self.assertEqual(v, getattr(m, name), name)
         self.assertIn('viewBox: "0 0 92 92"', js)
@@ -118,6 +121,26 @@ class MascotTest(unittest.TestCase):
         for app in ("files", "notes", "settings"):
             html = open(os.path.join(helpers.SF, "usr/share/grokbot/webapps", app, "index.html"), encoding="utf-8").read()
             self.assertIn('src="/_grokbot/mascot.js"', html, app)
+
+    def test_js_face_matches_python_numerically(self):
+        import shutil, subprocess
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("no node")
+        prog = ("global.window={matchMedia:()=>({matches:false})};global.matchMedia=window.matchMedia;"
+                "require(process.argv[1]);const F=window.GBMascot.face,o={};"
+                "for(const m of window.GBMascot.MOODS)for(const h of [false,true])"
+                "o[m+h]=F(m,0.4,[0.7,-0.3],1.37,0.3,h);console.log(JSON.stringify(o))")
+        js = json.loads(subprocess.run([node, "-e", prog, JS], capture_output=True, text=True,
+                                       check=True, timeout=30).stdout)
+        for mood in m.MOODS:
+            for hero in (False, True):
+                p = m.face(mood, 0.4, (0.7, -0.3), 1.37, 0.3, hero)
+                j = js[mood + ("true" if hero else "false")]
+                a = [*p["body"], p["scale"], p["dim"]] + [v for e in p["eyes"] for v in e]
+                b = [*j["body"], j["scale"], j["dim"]] + [v for e in j["eyes"] for v in e]
+                for x, y in zip(a, b):
+                    self.assertAlmostEqual(x, y, places=9, msg=mood)
 
 
 if __name__ == "__main__":
