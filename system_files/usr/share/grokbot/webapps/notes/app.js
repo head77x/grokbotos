@@ -50,7 +50,7 @@
     if (!shown.length && q) { const li = document.createElement("li"); li.className = "dim"; li.textContent = t("nomatch"); ul.append(li); }
     $("ed").classList.toggle("hidden", !cur);
     $("empty").classList.toggle("hidden", !!cur);
-    if (!cur && window.GBMascot && !$("bit").firstChild) $("bit").append(GBMascot.create("idle", "Bit"));
+    if (!cur && window.GBMascot && !$("bit").firstChild) $("bit").append(GBMascot.create("idle", "Grok Bot"));
     if (cur) $("saved").textContent = t("saved", when(cur.updated));
   }
   const firstLine = (s) => (s || "").split("\n").find((l) => l.trim()) || "";

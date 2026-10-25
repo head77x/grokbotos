@@ -43,7 +43,7 @@
   // files.* calls go to the open USB drive when one is selected (volume = storage.list id).
   const withVol = (m, p) => (vol && m.startsWith("files.")) ? Object.assign({}, p, { volume: vol.id }) : p;
   class ApiError extends Error { constructor(e) { super(e.message); this.code = e.code; } }
-  const bit = (mood) => (window.GBMascot ? GBMascot.create(mood, "Bit") : h("span", {}));
+  const bit = (mood) => (window.GBMascot ? GBMascot.create(mood, "Grok Bot") : h("span", {}));
   async function rpc(method, params) {
     const r = await fetch("/v1/rpc", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: ++rid, method, params: withVol(method, params || {}), "x-client": "Files" }) });
