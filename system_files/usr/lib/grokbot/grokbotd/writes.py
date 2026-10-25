@@ -191,8 +191,9 @@ def lock_set_idle(params):
 def _later(cmd):
     def go():
         try:
+            from . import sway
             subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                             stderr=subprocess.DEVNULL, start_new_session=True)
+                             stderr=subprocess.DEVNULL, start_new_session=True, env=sway.session_env())
         except OSError:
             pass
     threading.Timer(0.5, go).start()

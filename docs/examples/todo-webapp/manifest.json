@@ -1,0 +1,4 @@
+{ "name": "Todo", "short_name": "Todo", "start_url": "/", "display": "standalone", "lang": "ko",
+  "background_color": "#121214", "theme_color": "#121214", "version": "1.0.1",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }],
+  "grokbot": { "id": "todo", "name_ko": "할 일", "scopes": ["files", "files-write"] } }

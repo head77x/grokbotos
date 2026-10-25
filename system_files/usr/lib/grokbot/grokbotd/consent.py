@@ -6,7 +6,6 @@ One prompt at a time; a prompt that is not answered in TIMEOUT seconds,
 or that cannot be shown (no Wayland session), counts as "deny".
 The request text is passed on stdin as JSON, never on the command line.
 """
-import glob
 import json
 import os
 import subprocess
@@ -14,7 +13,7 @@ import threading
 import time
 import uuid
 
-from . import paths, perms
+from . import perms
 
 TIMEOUT = 60
 SECRET_TIMEOUT = 120
@@ -32,13 +31,8 @@ def _cmd():
 
 
 def _env():
-    env = dict(os.environ)
-    if not env.get("WAYLAND_DISPLAY"):
-        socks = sorted(os.path.basename(p) for p in glob.glob(os.path.join(paths.runtime_dir(), "wayland-*"))
-                       if not p.endswith(".lock"))
-        if socks:
-            env["WAYLAND_DISPLAY"] = socks[0]
-    return env
+    from . import sway
+    return sway.session_env()
 
 
 def prompt(principal, client, scope, method, description, summary, allow_always,

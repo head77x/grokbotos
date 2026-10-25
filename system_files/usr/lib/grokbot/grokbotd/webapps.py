@@ -506,8 +506,9 @@ def uninstall(params, ctx):
     _prompt(ctx, "apps.uninstall", ["웹 앱 제거: %s" % rec.get("name_ko"), "Remove web app: %s" % rec.get("name")],
             {"app": rec.get("name"), "id": app_id, "origin": rec.get("origin"),
              "data": "보관 / kept" if keep else "삭제 / deleted (storage, cache, grants)"})
+    from . import sway
     subprocess.run(["swaymsg", "[app_id=\"grokbot-webapp-%s\"] kill" % app_id],
-                   capture_output=True, timeout=5) if shutil.which("swaymsg") else None
+                   capture_output=True, timeout=5, env=sway.session_env()) if shutil.which("swaymsg") else None
     for p in (_desktop_path(app_id), _record_path(app_id)):
         try:
             os.unlink(p)
@@ -536,9 +537,10 @@ def launch(params, ctx):
     cmd = ["/usr/local/bin/grokbot-settings"] if app_id == "settings" else \
         [os.environ.get("GROKBOT_WEBAPP_BIN", "/usr/local/bin/grokbot-webapp"), app_id]
     # grokbot-webapp / grokbot-settings put the window on a new workspace.
+    from . import sway
     try:
         subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
-                         stderr=subprocess.DEVNULL, start_new_session=True)
+                         stderr=subprocess.DEVNULL, start_new_session=True, env=sway.session_env())
     except OSError as e:
         raise InstallError("could not start the app: %s" % type(e).__name__)
     return {"id": app_id, "launched": True, "app_id": "grokbot-webapp-%s" % app_id}
