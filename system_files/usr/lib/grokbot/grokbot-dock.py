@@ -33,6 +33,7 @@ import gi
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import grokbot_status  # noqa: E402
+import grokbot_mascot  # noqa: E402
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("GtkLayerShell", "0.1")
@@ -47,19 +48,22 @@ USER_CONF = os.path.join(
     "grokbot", "dock.conf")
 
 CSS = b"""
-window.grokbot-dock { background-color: rgba(24,24,27,0.94); }
-.grokbot-dock button { background: none; border: none; box-shadow: none;
-  padding: 4px; margin: 2px; border-radius: 10px; color: #f4f4f5; }
-.grokbot-dock button:hover { background-color: rgba(255,255,255,0.10); }
-.grokbot-dock button.focused { background-color: rgba(255,255,255,0.18); }
-.grokbot-dock .dot { color: rgba(0,0,0,0); font-size: 8px; }
-.grokbot-dock button.running .dot { color: #60a5fa; }
+/* Grok Bot OS design tokens (see /usr/share/grokbot/design/tokens.css). */
+window.grokbot-dock { background-color: rgba(18,18,20,0.92); }
+.grokbot-dock button { background: none; border: none; box-shadow: none; background-image: none;
+  padding: 5px; margin: 3px 2px; border-radius: 12px; color: #f2f2f2;
+  transition: background-color 140ms cubic-bezier(.22,1,.36,1); }
+.grokbot-dock button:hover { background-color: rgba(255,255,255,0.08); }
+.grokbot-dock button.focused { background-color: rgba(255,255,255,0.14); }
+.grokbot-dock .dot { color: rgba(0,0,0,0); font-size: 7px; }
+.grokbot-dock button.running .dot { color: #64b5ff; }
 .grokbot-dock label.name { padding-left: 8px; padding-right: 8px; }
-.grokbot-dock .status { margin: 0 6px; }
-.grokbot-dock .status button { padding: 2px 4px; margin: 1px; }
-.grokbot-dock .status label { font-size: 13px; padding: 0 2px; }
-.grokbot-dock .status button.alert { background-color: #dc2626; color: #ffffff; }
-.grokbot-dock .sep { background-color: rgba(255,255,255,0.15); min-width: 1px; min-height: 1px; }
+.grokbot-dock .status { margin: 0 8px; }
+.grokbot-dock .status button { padding: 3px 5px; margin: 2px 1px; border-radius: 10px; }
+.grokbot-dock .status button.mascot { padding: 1px 3px; }
+.grokbot-dock .status label { font-size: 13px; padding: 0 2px; color: rgba(255,255,255,0.86); }
+.grokbot-dock .status button.alert { background-color: #e5484d; color: #ffffff; }
+.grokbot-dock .sep { background-color: rgba(255,255,255,0.10); min-width: 1px; min-height: 1px; }
 """
 
 
@@ -340,7 +344,7 @@ class Dock:
         if not hasattr(self, "poller"):
             self.status_items = []
             self.poller = grokbot_status.Poller(
-                grokbot_status.items, lambda res: GLib.idle_add(self._status_ready, res))
+                grokbot_mascot.leading(grokbot_status.items), lambda res: GLib.idle_add(self._status_ready, res))
         self.poller.request()
         try:
             self.apply_status(self.status_items)
@@ -369,6 +373,15 @@ class Dock:
             b.set_visible(sid in live)
         for pos, item in enumerate(items):
             w = self.status_widgets.get(item["id"])
+            if w is None and item["id"] == "mascot":
+                w = self.status_widgets["mascot"] = self.make_mascot(size + 6)
+            if item["id"] == "mascot":
+                btn = w[0]
+                btn.set_visible(True)
+                self.status_box.reorder_child(btn, pos)
+                self.mascot_mood = item.get("mascot", "idle")
+                btn.set_tooltip_text(item["tooltip"])
+                continue
             if w is None:
                 btn = Gtk.Button()
                 btn.set_relief(Gtk.ReliefStyle.NONE)
@@ -407,8 +420,47 @@ class Dock:
             # in the tooltip (충전 중, 전원 연결됨, 전원 연결됨 (가득 참), NN%).
             btn.set_tooltip_text(item["tooltip"])
 
+    def make_mascot(self, px):
+        """Bit in the status area: a DrawingArea animated in code."""
+        import time
+        btn = Gtk.Button()
+        btn.set_relief(Gtk.ReliefStyle.NONE)
+        btn.get_style_context().add_class("mascot")
+        area = Gtk.DrawingArea()
+        area.set_size_request(px, px)
+        btn.add(area)
+        btn.connect("clicked", self.on_status_click, "mascot")
+        self.mascot_mood = "idle"
+        life = grokbot_mascot.Idle(now=time.monotonic())
+        state = {"b": 0.0, "l": (0.0, 0.0), "t": 0.0, "alive": True}
+
+        def on_draw(_w, cr):
+            a = area.get_allocation()
+            sz = min(a.width, a.height)
+            cr.translate((a.width - sz) / 2, (a.height - sz) / 2)
+            grokbot_mascot.draw(cr, sz, grokbot_mascot.face(self.mascot_mood, state["b"], state["l"], state["t"]))
+            return False
+
+        def tick():
+            if not state["alive"]:
+                return False
+            now = time.monotonic()
+            state["b"], state["l"] = life.step(now)
+            state["t"] = now
+            if self.mascot_mood in ("idle", "listening", "thinking", "sleeping") or life.animating(now):
+                area.queue_draw()
+            return True
+        area.connect("draw", on_draw)
+        area.connect("destroy", lambda *_: state.update(alive=False))
+        GLib.timeout_add(60, tick)
+        self.status_box.pack_start(btn, False, False, 0)
+        btn.show_all()
+        return (btn, None, None)
+
     def on_status_click(self, _btn, sid):
-        if sid == "network":
+        if sid == "mascot":
+            subprocess.Popen(["/usr/local/bin/grokbot-focus"])
+        elif sid == "network":
             wired = getattr(self, "status_pages", {}).get("network") == "network"
             subprocess.Popen(["/usr/local/bin/grokbot-settings", "network" if wired else "wifi"])
         elif sid == "vpn":

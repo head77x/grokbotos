@@ -47,3 +47,8 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: none;
 @keyframes gb-enter { from { opacity: 0; transform: translateY(8px) scale(.97); } to { opacity: 1; transform: none; } }
 .gb-enter { animation: gb-enter var(--gb-mid) var(--gb-spring) both; }
 .hidden { display: none !important; }
+/* Bit, the character (mascot.js) */
+.gb-mascot { width: 40px; height: 40px; flex: none; overflow: visible; }
+.gb-mascot .head { transition: fill var(--gb-slow) var(--gb-ease); }
+.gb-mascot .ink { fill: #0a0a0b; }
+.gb-mascot .stroke { fill: none; stroke: #0a0a0b; stroke-width: 5; stroke-linecap: round; }

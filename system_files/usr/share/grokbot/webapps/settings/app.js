@@ -11,15 +11,35 @@
   class ApiError extends Error {
     constructor(e) { super(e.message); this.code = e.code; this.data = e.data || {}; }
   }
-  async function rpc(method, params) {
-    const r = await fetch("/v1/rpc", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ jsonrpc: "2.0", id: ++rid, method, params: params || {} })
-    });
-    const body = await r.json();
-    if (body.error) throw new ApiError(body.error);
-    return body.result;
+  // Bit in the sidebar: thinking while OS calls are slow, sad on errors.
+  let pending = 0, bitTimer = null;
+  const bit = () => document.querySelector("#bit .gb-mascot");
+  function bitMood() {
+    const b = bit();
+    if (b) b.setMood(pending > 0 ? "thinking" : "idle");
   }
+  async function rpc(method, params) {
+    pending++;
+    clearTimeout(bitTimer);
+    bitTimer = setTimeout(bitMood, 350);
+    try {
+      const r = await fetch("/v1/rpc", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: ++rid, method, params: params || {} })
+      });
+      const body = await r.json();
+      if (body.error) {
+        const b = bit();
+        if (b) b.flash("sad", 1600);
+        throw new ApiError(body.error);
+      }
+      return body.result;
+    } finally {
+      pending--;
+      if (!pending) { clearTimeout(bitTimer); bitMood(); }
+    }
+  }
+  if (window.GBMascot) document.getElementById("bit").append(GBMascot.create("idle", "Bit"));
 
   function h(tag, attrs, ...kids) {
     const el = document.createElement(tag);

@@ -43,6 +43,7 @@
   // files.* calls go to the open USB drive when one is selected (volume = storage.list id).
   const withVol = (m, p) => (vol && m.startsWith("files.")) ? Object.assign({}, p, { volume: vol.id }) : p;
   class ApiError extends Error { constructor(e) { super(e.message); this.code = e.code; } }
+  const bit = (mood) => (window.GBMascot ? GBMascot.create(mood, "Bit") : h("span", {}));
   async function rpc(method, params) {
     const r = await fetch("/v1/rpc", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: ++rid, method, params: withVol(method, params || {}), "x-client": "Files" }) });
@@ -65,11 +66,13 @@
   async function request(scope, box) {
     box.querySelectorAll("button").forEach((b) => { b.disabled = true; });
     const msg = h("span", { class: "dim" }, t("asking")); box.append(msg);
+    const face = box.querySelector(".gb-mascot"), mood = (m) => face && face.setMood && face.setMood(m);
+    mood("thinking");
     try {
       const r = await rpc("permissions.request", { scope, reason: lang === "ko" ? "파일 앱에서 홈 폴더를 보여 주고 바꾸기" : "Files app: browse and change your home folder" });
       await loadModes();
-      if (r.mode === "deny") msg.textContent = t("denied"); else return render(), go(vol ? "/" : cwd);
-    } catch (e) { msg.textContent = e.message; }
+      if (r.mode === "deny") { msg.textContent = t("denied"); mood("sad"); } else return render(), go(vol ? "/" : cwd);
+    } catch (e) { msg.textContent = e.message; mood("error"); }
     box.querySelectorAll("button").forEach((b) => { b.disabled = false; });
   }
 
@@ -109,9 +112,9 @@
     const main = $("main"); main.replaceChildren();
     const ro = writeMode() === "deny";
     $("mkdir").disabled = ro; $("newfile").disabled = ro; $("up").disabled = cwd === "/" || !canRead();
-    if (!modes) { main.append(h("div", { class: "empty" }, t("offline"))); return; }
+    if (!modes) { main.append(h("div", { class: "empty" }, bit("sad"), t("offline"))); return; }
     if (!canRead()) {
-      const box = h("div", { class: "need" }, h("div", {}, vol ? t("needreadvol", vol.label) : t("needread")));
+      const box = h("div", { class: "need" }, bit("alert"), h("div", {}, vol ? t("needreadvol", vol.label) : t("needread")));
       box.append(h("button", { type: "button", class: "primary", onclick: () => request("files", box) }, t("ask")));
       main.append(box); return;
     }
@@ -136,7 +139,7 @@
       tb.append(tr);
     }
     main.append(h("table", {}, h("thead", {}, h("tr", {}, h("th", {}, t("name")), h("th", {}, t("size")), h("th", {}, t("modified")), h("th", {}))), tb));
-    if (!rows.length) main.append(h("div", { class: "empty" }, t("empty")));
+    if (!rows.length) main.append(h("div", { class: "empty" }, bit("idle"), t("empty")));
     main.append(h("p", { class: "dim" }, t("items", listing.entries.length) + (listing.hidden ? " · " + t("hidden", listing.hidden) : "")));
   }
 

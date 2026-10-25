@@ -47,7 +47,7 @@ class WebappTests(tg.Base):
             self.assertIn(b"--gb-bg", body)
             self.assertIn("style-src 'self'", h["Content-Security-Policy"])
         host = "settings.app.localhost:%d" % self.port
-        self.assertEqual(self.get(host, "/_grokbot/base.css")[0], 200)
+        self.assertEqual(self.get(host, "/_grokbot/mascot.js")[0], 200)
         for path in ("/_grokbot/../webapps/settings/app.js", "/_grokbot/", "/_grokbot/.x.css", "/_grokbot/nope.css"):
             self.assertEqual(self.get(host, path)[0], 404, path)
         self.assertEqual(self.get("evil.app.localhost:%d" % self.port, "/_grokbot/tokens.css")[0], 404)

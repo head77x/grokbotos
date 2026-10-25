@@ -144,7 +144,36 @@ def main():
         card.pack_start(lb, False, False, 0)
         return lb
 
-    lab(t["title"], "title")
+    # Bit, the OS character, looks up at you while it waits (code-drawn).
+    head = Gtk.Box(spacing=12)
+    face_area = Gtk.DrawingArea()
+    face_area.set_size_request(44, 44)
+    try:
+        import grokbot_mascot
+        life = grokbot_mascot.Idle(now=time.monotonic())
+        anim = {"b": 0.0, "l": (0.0, -0.3)}
+
+        def draw_face(w, cr):
+            a = w.get_allocation()
+            grokbot_mascot.draw(cr, min(a.width, a.height),
+                                grokbot_mascot.face("alert", anim["b"], anim["l"], time.monotonic()))
+            return False
+
+        def tick():
+            anim["b"], look = life.step(time.monotonic())
+            anim["l"] = (look[0], look[1] - 0.3)
+            face_area.queue_draw()
+            return True
+        face_area.connect("draw", draw_face)
+        GLib.timeout_add(60, tick)
+        head.pack_start(face_area, False, False, 0)
+    except ImportError:
+        pass
+    title = Gtk.Label(label=t["title"], xalign=0)
+    title.set_line_wrap(True)
+    title.get_style_context().add_class("title")
+    head.pack_start(title, True, True, 0)
+    card.pack_start(head, False, False, 0)
     for key, pair in (("누가 / Who", t["who"]), ("무엇을 / Scope", t["scope"]),
                       ("어떤 동작 / Action", t["action"])):
         lab(key, "key")

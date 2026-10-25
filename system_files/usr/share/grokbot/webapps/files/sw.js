@@ -1,6 +1,6 @@
 // App shell cache so the app opens without grokbotd; OS API calls are never cached.
-const CACHE = "files-v5";
-const SHELL = ["./", "index.html", "app.js", "style.css", "icon.svg", "manifest.json", "files.css", "/_grokbot/tokens.css", "/_grokbot/base.css"];
+const CACHE = "files-v6";
+const SHELL = ["./", "index.html", "app.js", "style.css", "icon.svg", "manifest.json", "files.css", "/_grokbot/tokens.css", "/_grokbot/base.css", "/_grokbot/mascot.js"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
